@@ -1,0 +1,185 @@
+{
+  "name": "gymtelligent_exercise_classifier",
+  "format": "TensorFlow Lite",
+  "source_model": "final_forthesis_bidirectionallstm_and_encoders_exercise_classifier_model.h5",
+  "source_scaler": "thesis_bidirectionallstm_scaler.pkl",
+  "source_label_encoder": "thesis_bidirectionallstm_label_encoder.pkl",
+  "input": {
+    "shape": [
+      1,
+      30,
+      22
+    ],
+    "dtype": "float32",
+    "description": "Raw unscaled 30-frame sequence of 22 biomechanical features per frame."
+  },
+  "output": {
+    "shape": [
+      1,
+      4
+    ],
+    "dtype": "float32",
+    "labels": [
+      "barbell biceps curl",
+      "push-up",
+      "shoulder press",
+      "squat"
+    ]
+  },
+  "landmarks": [
+    {
+      "index": 11,
+      "name": "LEFT_SHOULDER"
+    },
+    {
+      "index": 12,
+      "name": "RIGHT_SHOULDER"
+    },
+    {
+      "index": 13,
+      "name": "LEFT_ELBOW"
+    },
+    {
+      "index": 14,
+      "name": "RIGHT_ELBOW"
+    },
+    {
+      "index": 15,
+      "name": "LEFT_WRIST"
+    },
+    {
+      "index": 16,
+      "name": "RIGHT_WRIST"
+    },
+    {
+      "index": 23,
+      "name": "LEFT_HIP"
+    },
+    {
+      "index": 24,
+      "name": "RIGHT_HIP"
+    },
+    {
+      "index": 25,
+      "name": "LEFT_KNEE"
+    },
+    {
+      "index": 26,
+      "name": "RIGHT_KNEE"
+    },
+    {
+      "index": 27,
+      "name": "LEFT_ANKLE"
+    },
+    {
+      "index": 28,
+      "name": "RIGHT_ANKLE"
+    }
+  ],
+  "features": [
+    "angle_left_shoulder_elbow_wrist",
+    "angle_right_shoulder_elbow_wrist",
+    "angle_left_hip_knee_ankle",
+    "angle_right_hip_knee_ankle",
+    "angle_left_shoulder_hip_knee",
+    "angle_right_shoulder_hip_knee",
+    "angle_left_hip_shoulder_elbow",
+    "angle_right_hip_shoulder_elbow",
+    "dist_left_shoulder_right_shoulder_norm",
+    "dist_left_hip_right_hip_norm",
+    "dist_left_hip_left_knee_norm",
+    "dist_right_hip_right_knee_norm",
+    "dist_left_shoulder_left_hip_norm",
+    "dist_right_shoulder_right_hip_norm",
+    "dist_left_elbow_left_knee_norm",
+    "dist_right_elbow_right_knee_norm",
+    "dist_left_wrist_left_shoulder_norm",
+    "dist_right_wrist_right_shoulder_norm",
+    "dist_left_wrist_left_hip_norm",
+    "dist_right_wrist_right_hip_norm",
+    "ydist_left_elbow_left_shoulder_norm",
+    "ydist_right_elbow_right_shoulder_norm"
+  ],
+  "artifacts": [
+    {
+      "file": "exercise_classifier_with_scaler_fp32.tflite",
+      "bytes": 1194568,
+      "sha256": "01fab5b3f85a2495547c2b8e6e359b8e9b322e48ebaf17b093b74f93e238bd72",
+      "ops": "TFLITE_BUILTINS",
+      "max_abs_diff_vs_keras_wrapper": 9.313225746154785e-10
+    },
+    {
+      "file": "exercise_classifier_with_scaler_fp16.tflite",
+      "bytes": 622124,
+      "sha256": "2abc05233833c3c9d0193642da0f50457cfb39109a34eb878bd081d68bcf5386",
+      "ops": "TFLITE_BUILTINS",
+      "max_abs_diff_vs_keras_wrapper": 1.6689300537109375e-06
+    }
+  ],
+  "tflite_details": {
+    "exercise_classifier_with_scaler_fp32.tflite": {
+      "inputs": [
+        {
+          "name": "serving_default_raw_feature_sequence:0",
+          "shape": [
+            1,
+            30,
+            22
+          ],
+          "shape_signature": [
+            1,
+            30,
+            22
+          ],
+          "dtype": "<class 'numpy.float32'>"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "StatefulPartitionedCall_1:0",
+          "shape": [
+            1,
+            4
+          ],
+          "shape_signature": [
+            1,
+            4
+          ],
+          "dtype": "<class 'numpy.float32'>"
+        }
+      ]
+    },
+    "exercise_classifier_with_scaler_fp16.tflite": {
+      "inputs": [
+        {
+          "name": "serving_default_raw_feature_sequence:0",
+          "shape": [
+            1,
+            30,
+            22
+          ],
+          "shape_signature": [
+            1,
+            30,
+            22
+          ],
+          "dtype": "<class 'numpy.float32'>"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "StatefulPartitionedCall_1:0",
+          "shape": [
+            1,
+            4
+          ],
+          "shape_signature": [
+            1,
+            4
+          ],
+          "dtype": "<class 'numpy.float32'>"
+        }
+      ]
+    }
+  }
+}

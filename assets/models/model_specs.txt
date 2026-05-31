@@ -1,0 +1,100 @@
+Gymtelligent AI handover - TensorFlow Lite exercise classifier
+
+Source project:
+  Local repo: C:\Users\minhd\Downloads\exe
+  Baseline GitHub: https://github.com/riccardoriccio/fitness-ai-trainer-with-automatic-exercise-recognition-and-counting
+
+Exported model files:
+  - exercise_classifier_with_scaler_fp32.tflite (1194568 bytes, ops=TFLITE_BUILTINS, sha256=01fab5b3f85a2495547c2b8e6e359b8e9b322e48ebaf17b093b74f93e238bd72)
+  - exercise_classifier_with_scaler_fp16.tflite (622124 bytes, ops=TFLITE_BUILTINS, sha256=2abc05233833c3c9d0193642da0f50457cfb39109a34eb878bd081d68bcf5386)
+
+Important integration note:
+  This is an exercise-classification model, not a per-frame UP/DOWN pose-state model.
+  It predicts one exercise label for a 30-frame window. Repetition counting remains
+  rule-based and uses landmark angles after the exercise label is known.
+
+Input tensor:
+  Name: raw_feature_sequence
+  Shape: [1, 30, 22]
+  DType: float32
+  Meaning: 30 consecutive frames, 22 biomechanical features per frame.
+  Windowing: the current Python app uses non-overlapping 30-frame windows.
+
+Preprocessing required in the app:
+  1. Run MediaPipe Pose / BlazePose on each video frame.
+  2. Read the 12 landmarks listed below as x, y, z values.
+  3. Compute the 22 features listed below for every valid frame.
+  4. Feed raw unscaled [1, 30, 22] features into this TFLite model.
+  5. Do not apply thesis_bidirectionallstm_scaler.pkl in the app; the scaler
+     is embedded inside the exported TFLite graph.
+
+Missing landmarks:
+  The original Python code uses -1.0 placeholders when required landmark
+  coordinates/distances are missing. For best behavior, skip bad frames when
+  possible and only append a frame when all 12 landmarks are available.
+
+Landmark index map (MediaPipe BlazePose):
+  11: LEFT_SHOULDER
+  12: RIGHT_SHOULDER
+  13: LEFT_ELBOW
+  14: RIGHT_ELBOW
+  15: LEFT_WRIST
+  16: RIGHT_WRIST
+  23: LEFT_HIP
+  24: RIGHT_HIP
+  25: LEFT_KNEE
+  26: RIGHT_KNEE
+  27: LEFT_ANKLE
+  28: RIGHT_ANKLE
+
+Feature order per frame:
+  00: angle_left_shoulder_elbow_wrist
+  01: angle_right_shoulder_elbow_wrist
+  02: angle_left_hip_knee_ankle
+  03: angle_right_hip_knee_ankle
+  04: angle_left_shoulder_hip_knee
+  05: angle_right_shoulder_hip_knee
+  06: angle_left_hip_shoulder_elbow
+  07: angle_right_hip_shoulder_elbow
+  08: dist_left_shoulder_right_shoulder_norm
+  09: dist_left_hip_right_hip_norm
+  10: dist_left_hip_left_knee_norm
+  11: dist_right_hip_right_knee_norm
+  12: dist_left_shoulder_left_hip_norm
+  13: dist_right_shoulder_right_hip_norm
+  14: dist_left_elbow_left_knee_norm
+  15: dist_right_elbow_right_knee_norm
+  16: dist_left_wrist_left_shoulder_norm
+  17: dist_right_wrist_right_shoulder_norm
+  18: dist_left_wrist_left_hip_norm
+  19: dist_right_wrist_right_hip_norm
+  20: ydist_left_elbow_left_shoulder_norm
+  21: ydist_right_elbow_right_shoulder_norm
+
+Distance normalization:
+  Raw Euclidean and y-axis distances are divided by the first positive value among:
+    - distance(LEFT_SHOULDER, LEFT_HIP)
+    - distance(RIGHT_SHOULDER, RIGHT_HIP)
+    - distance(LEFT_HIP, LEFT_KNEE)
+    - distance(RIGHT_HIP, RIGHT_KNEE)
+  If none is positive, the Python fallback uses 0.5.
+
+Output tensor:
+  Shape: [1, 4]
+  DType: float32
+  Meaning: softmax probabilities in label-index order.
+
+Label map:
+  0: barbell biceps curl
+  1: push-up
+  2: shoulder press
+  3: squat
+
+Confidence threshold:
+  The current Python project accepts argmax without a threshold. For mobile,
+  start with max_probability >= 0.60 and tune with real camera data. If the
+  confidence is lower, keep the previous stable exercise label or show "detecting".
+
+Recommended app flow:
+  MediaPipe Pose -> landmark extraction -> feature extraction -> TFLite classifier
+  -> label-specific angle counter from rep_counter_logic.py.
