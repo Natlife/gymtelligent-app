@@ -5,6 +5,7 @@ import 'welcome_screen.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/stats_service.dart';
+import '../services/workout_service.dart';
 import '../models/stats_summary.dart';
 import '../services/feedback_service.dart';
 import 'admin_feedback_screen.dart';
@@ -23,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   bool _isLoading = true;
   Map<String, dynamic>? _profileData;
   StatsSummary? _summary;
+  List<dynamic> _personalRecords = [];
 
   @override
   void initState() {
@@ -44,10 +46,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     try {
       final profile = await ProfileService.getProfile();
       final summary = await StatsService.getSummary();
+      final records = await WorkoutService.getPersonalRecords();
       if (mounted) {
         setState(() {
           _profileData = profile;
           _summary = summary;
+          _personalRecords = records;
           _isLoading = false;
         });
       }
@@ -238,9 +242,44 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             ),
           ),
           const SizedBox(height: 16),
-          _buildRecordItem('Push Ups', '45 reps', '+5'),
-          const SizedBox(height: 12),
-          _buildRecordItem('Plank', '3:45 mins', '+15s'),
+          if (_personalRecords.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Text(
+                  'No personal records achieved yet.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.getSecondaryTextColor(context),
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ),
+            )
+          else
+            ..._personalRecords.map((record) {
+              final exerciseName = record['exercise']?['name'] ?? 'Unknown Exercise';
+              final maxReps = record['maxReps'] ?? 0;
+              final maxDuration = record['maxDurationSeconds'] ?? 0;
+
+              String recordValue = '';
+              if (maxReps > 0 && maxDuration > 0) {
+                recordValue = '$maxReps reps (${maxDuration}s)';
+              } else if (maxReps > 0) {
+                recordValue = '$maxReps reps';
+              } else if (maxDuration > 0) {
+                final mins = maxDuration ~/ 60;
+                final secs = maxDuration % 60;
+                recordValue = mins > 0 ? '$mins:${secs.toString().padLeft(2, '0')} mins' : '${maxDuration}s';
+              } else {
+                recordValue = '0';
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: _buildRecordItem(exerciseName, recordValue, 'PR'),
+              );
+            }).toList(),
 
           const SizedBox(height: 36),
 

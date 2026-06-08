@@ -20,26 +20,15 @@ class WorkoutService {
       if (response.statusCode == 200 && data['code'] == 1000) {
         final List<dynamic> list = data['data'];
         final parsed = list.map((e) => Exercise.fromJson(e)).toList();
+        parsed.removeWhere((exercise) => exercise.name.toLowerCase().contains("push up"));
         if (parsed.isNotEmpty) {
           return parsed;
         }
       }
     } catch (_) {}
     
-    // Offline / Seeding Fail Fallback: Return exactly the 4 exercises supported by our AI TFLite Model
+    // Offline / Seeding Fail Fallback: Return exactly the 3 exercises supported by our AI TFLite Model (Push Ups removed)
     return [
-      Exercise(
-        id: 1,
-        name: "Push Ups",
-        category: "STRENGTH",
-        difficultyLevel: "BEGINNER",
-        metValue: 3.8,
-        description: "A fundamental upper body exercise that targets chest, shoulders, and triceps. Perfect for building pushing strength and core stability.",
-        muscleGroups: "chest, shoulders, triceps, core",
-        instructions: ["Start in a plank position with hands shoulder-width apart", "Lower your body until chest nearly touches the floor", "Keep your core tight and body in a straight line", "Push back up to starting position"],
-        defaultSets: 3,
-        defaultReps: 15,
-      ),
       Exercise(
         id: 2,
         name: "Squats",
@@ -125,6 +114,17 @@ class WorkoutService {
       if (response.statusCode == 200 && data['code'] == 1000) {
         final List<dynamic> list = data['data']['content'];
         return list.map((e) => WorkoutSession.fromJson(e)).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<List<dynamic>> getPersonalRecords() async {
+    try {
+      final response = await ApiClient.get('/workouts/records');
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['code'] == 1000) {
+        return data['data'] ?? [];
       }
     } catch (_) {}
     return [];

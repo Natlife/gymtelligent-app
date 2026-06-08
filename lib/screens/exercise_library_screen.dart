@@ -259,6 +259,8 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                         ),
                       ),
 
+                      const SizedBox(height: 18),
+
                       // Horizontal category chips
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -296,12 +298,9 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                                   )
                                 : ListView.builder(
                                 physics: const BouncingScrollPhysics(),
-                                itemCount: _filteredExercises.length + 1,
+                                itemCount: _filteredExercises.length,
                                 itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    return _buildFreestyleBanner(isTablet);
-                                  }
-                                  final exercise = _filteredExercises[index - 1];
+                                  final exercise = _filteredExercises[index];
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 24.0),
                                     child: _buildExerciseCard(exercise, isTablet),
@@ -559,153 +558,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
     );
   }
 
-  Widget _buildFreestyleBanner(bool isTablet) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const CameraTrainingScreen(
-              exerciseId: -1,
-              exerciseTitle: 'Free Style Mode',
-              duration: 'Unlimited',
-              level: 'All levels',
-              targetSets: 1,
-              targetReps: 999,
-              restSeconds: 0,
-              isFreestyleMode: true,
-            ),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              const curve = Curves.easeInOutCubic;
-              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-              return SlideTransition(position: animation.drive(tween), child: child);
-            },
-          ),
-        );
-      },
-      child: Container(
-        height: isTablet ? 190 : 155,
-        margin: const EdgeInsets.only(bottom: 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0C2C29),
-              Color(0xFF131415),
-            ],
-          ),
-          border: Border.all(
-            color: Colors.cyan.withOpacity(0.4),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.cyan.withOpacity(0.12),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Icon(
-                  Icons.psychology_rounded,
-                  size: isTablet ? 180 : 140,
-                  color: Colors.cyan.withOpacity(0.06),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.cyan.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: Colors.cyan.withOpacity(0.4),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.bolt, color: Colors.cyan, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                'AI TFLITE',
-                                style: TextStyle(
-                                  color: Colors.cyan,
-                                  fontSize: isTablet ? 12 : 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
-                                  fontFamily: 'Inter',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Text(
-                            'AUTO-DETECT REPS',
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: isTablet ? 12 : 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                              fontFamily: 'Inter',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Free Style Training',
-                      style: TextStyle(
-                        fontSize: isTablet ? 24 : 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Auto-classify push-ups, squats, shoulder presses & curls with TFLite.',
-                      style: TextStyle(
-                        fontSize: isTablet ? 14 : 12,
-                        color: Colors.white.withOpacity(0.5),
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildNavItem(int index, String label, String iconPath, IconData fallbackIcon, bool isTablet) {
     final isActive = _activeNavIndex == index;

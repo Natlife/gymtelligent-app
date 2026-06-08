@@ -206,12 +206,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
 
                 // 5. Recommended Workout Cards
                 _buildWorkoutCard(
-                  title: 'Push Ups',
+                  title: 'Shoulder Press',
                   category: 'Strength',
-                  level: 'Beginner',
-                  duration: '15 min',
-                  calories: 120,
-                  imageUrl: 'https://images.unsplash.com/photo-1758521959396-4dbfd4a8ab11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxneW0lMjB3b3Jrb3V0JTIwbWFuJTIwcHVzaCUyMHVwc3xlbnwxfHx8fDE3NzMwMzg3NjV8MA&ixlib=rb-4.1.0&q=80&w=1080',
+                  level: 'Intermediate',
+                  duration: '12 min',
+                  calories: 150,
+                  imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzaG91bGRlciUyMHByZXNzfGVufDF8fHx8MTc3MzAzODc2Nnww&ixlib=rb-4.1.0&q=80&w=1080',
                   fallbackIcon: Icons.fitness_center_rounded,
                   isTablet: isTablet,
                 ),

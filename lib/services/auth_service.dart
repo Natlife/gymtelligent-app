@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'api_client.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   static Future<Map<String, dynamic>> login(String username, String password) async {
@@ -30,7 +31,8 @@ class AuthService {
 
       return {'success': false, 'message': data['message'] ?? 'Login failed'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
+      debugPrint('AuthService.login error: $e');
+      return {'success': false, 'message': 'Connection failed. Please check your internet and try again.'};
     }
   }
 
@@ -81,7 +83,8 @@ class AuthService {
 
       return {'success': false, 'message': data['message'] ?? 'Registration failed'};
     } catch (e) {
-      return {'success': false, 'message': 'Network error: $e'};
+      debugPrint('AuthService.register error: $e');
+      return {'success': false, 'message': 'Connection failed. Please check your internet and try again.'};
     }
   }
 
