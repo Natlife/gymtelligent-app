@@ -12,6 +12,7 @@ class AdminFeedbackScreen extends StatefulWidget {
 class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _feedbacks = [];
+  static const Duration _vietnamUtcOffset = Duration(hours: 7);
 
   @override
   void initState() {
@@ -40,20 +41,49 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
     }
   }
 
+  String _formatVietnamDateTime(dynamic rawDate, {required bool includeYear}) {
+    if (rawDate == null) return includeYear ? 'N/A' : '';
+
+    try {
+      final rawText = rawDate.toString().trim();
+      if (rawText.isEmpty) return includeYear ? 'N/A' : '';
+
+      final parsed = DateTime.parse(rawText);
+      final hasExplicitTimezone = rawText.endsWith('Z') ||
+          RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(rawText);
+      final utcTime = hasExplicitTimezone ? parsed.toUtc() : DateTime.utc(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+        parsed.second,
+        parsed.millisecond,
+        parsed.microsecond,
+      );
+      final vietnamTime = utcTime.add(_vietnamUtcOffset);
+
+      final day = vietnamTime.day.toString().padLeft(2, '0');
+      final month = vietnamTime.month.toString().padLeft(2, '0');
+      final hour = vietnamTime.hour.toString().padLeft(2, '0');
+      final minute = vietnamTime.minute.toString().padLeft(2, '0');
+
+      if (includeYear) {
+        return '$day/$month/${vietnamTime.year} - $hour:$minute';
+      }
+      return '$day/$month $hour:$minute';
+    } catch (_) {
+      return includeYear ? 'N/A' : '';
+    }
+  }
+
   void _showFeedbackDetail(Map<String, dynamic> feedback) {
     final senderName = feedback['senderName'] ?? 'Unknown User';
     final senderEmail = feedback['senderEmail'] ?? 'No Email';
     final title = feedback['title'] ?? 'Untitled';
     final content = feedback['content'] ?? '';
     final rawDate = feedback['createdAt'];
-    
-    String formattedDate = 'N/A';
-    if (rawDate != null) {
-      try {
-        final parsed = DateTime.parse(rawDate);
-        formattedDate = '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year} - ${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
-      } catch (_) {}
-    }
+    final formattedDate = _formatVietnamDateTime(rawDate, includeYear: true);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? Colors.cyan : const Color(0xFF0D9488);
@@ -306,14 +336,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                     final title = f['title'] ?? 'Untitled';
                     final senderName = f['senderName'] ?? 'Athlete';
                     final rawDate = f['createdAt'];
-                    
-                    String formattedDate = '';
-                    if (rawDate != null) {
-                      try {
-                        final parsed = DateTime.parse(rawDate);
-                        formattedDate = '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')} ${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
-                      } catch (_) {}
-                    }
+                    final formattedDate = _formatVietnamDateTime(rawDate, includeYear: false);
 
                     return GestureDetector(
                       onTap: () => _showFeedbackDetail(f),

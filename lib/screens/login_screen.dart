@@ -5,6 +5,7 @@ import 'signup_screen.dart';
 import 'exercise_library_screen.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../services/analytics_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -131,6 +132,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       // Set the theme reactively based on the user's role
       try {
         final profile = await ProfileService.getProfile();
+        await AnalyticsService.applyUserContext(profile);
+        await AnalyticsService.logLogin();
         if (profile != null && profile['roleName'] == 'ROLE_ADMIN') {
           appThemeNotifier.value = AppTheme.lightTheme;
         } else {

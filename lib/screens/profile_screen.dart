@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
-import 'login_screen.dart';
 import 'welcome_screen.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
@@ -8,6 +7,7 @@ import '../services/stats_service.dart';
 import '../services/workout_service.dart';
 import '../models/stats_summary.dart';
 import '../services/feedback_service.dart';
+import '../services/analytics_service.dart';
 import 'admin_feedback_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -286,6 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           // 7. Logout Button
           GestureDetector(
             onTap: () async {
+              await AnalyticsService.logLogout();
               // Clear saved token
               await AuthService.logout();
               if (mounted) {

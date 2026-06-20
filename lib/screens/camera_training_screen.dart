@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -371,13 +370,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
           }
         }
 
-        // Swapping width/height for portrait rotated frames so normalization aligns perfectly
-        final double rotatedWidth = (rotationDegrees == 90 || rotationDegrees == 270)
-            ? image.height.toDouble()
-            : image.width.toDouble();
-        final double rotatedHeight = (rotationDegrees == 90 || rotationDegrees == 270)
-            ? image.width.toDouble()
-            : image.height.toDouble();
+        final rotatedImageSize = _getRotatedImageSize(image, rotationDegrees);
 
         // Map the keypoints from the detected pose to MediaPipe ids
         pose.landmarks.forEach((type, landmark) {
@@ -387,10 +380,10 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
             if (landmark.likelihood < 0.55) return;
             
             // Normalize with respect to the actual rotated coordinate canvas processed by ML Kit
-            final double normX = landmark.x / rotatedWidth;
-            final double normY = landmark.y / rotatedHeight;
+            final double normX = (landmark.x / rotatedImageSize.width).clamp(0.0, 1.0).toDouble();
+            final double normY = (landmark.y / rotatedImageSize.height).clamp(0.0, 1.0).toDouble();
             // Normalize Z using rotatedWidth to keep all 3 dimensions (x, y, z) on the same unified scale [0.0 - 1.0]
-            final double normZ = landmark.z / rotatedWidth;
+            final double normZ = landmark.z / rotatedImageSize.width;
             landmarks[id] = Point3D(normX, normY, normZ);
           }
         });
@@ -443,6 +436,30 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
       default:
         return InputImageRotation.rotation90deg;
     }
+  }
+
+  Size _getRotatedImageSize(CameraImage image, int rotationDegrees) {
+    final bool isQuarterTurn = rotationDegrees == 90 || rotationDegrees == 270;
+    return isQuarterTurn
+        ? Size(image.height.toDouble(), image.width.toDouble())
+        : Size(image.width.toDouble(), image.height.toDouble());
+  }
+
+  Size _getCameraPreviewDisplaySize() {
+    final previewSize = _cameraController?.value.previewSize;
+    if (previewSize == null) {
+      return const Size(720, 1280);
+    }
+
+    final double shorterSide = math.min(previewSize.width, previewSize.height);
+    final double longerSide = math.max(previewSize.width, previewSize.height);
+    final orientation = _cameraController?.value.deviceOrientation;
+    final bool isLandscape = orientation == DeviceOrientation.landscapeLeft ||
+        orientation == DeviceOrientation.landscapeRight;
+
+    return isLandscape
+        ? Size(longerSide, shorterSide)
+        : Size(shorterSide, longerSide);
   }
 
   InputImageFormat _getFormat(int rawValue) {
@@ -702,25 +719,58 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
   }
 
   void _onRepCounted(int count) {
-    if (count != _repCount && !_isResting) {
+    if (_isResting || _isSavingWorkout) return;
+
+    if (_isFreestyleMode) {
+      if (count == _repCount) return;
       setState(() {
         _repCount = count;
-        _hudMessage = _isFreestyleMode
-            ? "Perfect Rep $_repCount! Keep it up!"
-            : "Perfect Rep $_repCount!";
+        _hudMessage = "Perfect Rep $_repCount! Keep it up!";
         _hudColor = AppTheme.gradientStart;
-        
-        if (!_isFreestyleMode && _repCount == _targetReps) {
-          _totalRepsAllSets += _repCount;
-          if (_currentSet < _targetSets) {
-            _startRestPhase();
-          } else {
-            _hudMessage = "Goal Achieved! Outstanding work!";
-            _hudColor = Colors.cyan;
-            _finishWorkout();
-          }
-        }
       });
+      return;
+    }
+
+    final int normalizedCount = count.clamp(0, _targetReps).toInt();
+    if (normalizedCount == _repCount) return;
+
+    setState(() {
+      _repCount = normalizedCount;
+      _hudMessage = "Perfect Rep $_repCount!";
+      _hudColor = AppTheme.gradientStart;
+    });
+
+    if (normalizedCount >= _targetReps) {
+      _completeCurrentSet(countFullTarget: true);
+    }
+  }
+
+  void _completeCurrentSet({required bool countFullTarget}) {
+    if (_isFreestyleMode || !_calibrationDone || _isPaused || _isResting || _isSavingWorkout) return;
+
+    final int repsToAdd = countFullTarget
+        ? _targetReps
+        : _repCount.clamp(0, _targetReps).toInt();
+    final bool isLastSet = _currentSet >= _targetSets;
+
+    setState(() {
+      _totalRepsAllSets = (_totalRepsAllSets + repsToAdd).clamp(0, _targetSets * _targetReps).toInt();
+      _repCount = 0;
+      _repCounterService.reset();
+
+      if (isLastSet) {
+        _hudMessage = "Goal Achieved! Outstanding work!";
+        _hudColor = Colors.cyan;
+      } else {
+        _hudMessage = "Set $_currentSet complete. Take a break.";
+        _hudColor = Colors.cyan;
+      }
+    });
+
+    if (isLastSet) {
+      _finishWorkout();
+    } else {
+      _startRestPhase();
     }
   }
 
@@ -925,18 +975,8 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
              _repCounterService.getCounter('bicep_curl') +
              _repCounterService.getCounter('shoulder_press');
     } else {
-      return _totalRepsAllSets + _repCount;
+      return (_totalRepsAllSets + _repCount).clamp(0, _targetSets * _targetReps).toInt();
     }
-  }
-
-  void _simulateRepCount() {
-    if (!_calibrationDone || _isPaused || _isResting) return;
-    
-    setState(() {
-      _formAccuracy = 95.0 + (math.Random().nextDouble() * 5.0);
-      _hudMessage = "AI Scanner: Analyzing biomechanics...";
-      _hudColor = AppTheme.gradientStart;
-    });
   }
 
   void _onPauseToggle() {
@@ -1060,6 +1100,9 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                 const SizedBox(height: 8),
                 Text(
                   widget.exerciseTitle,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -1178,6 +1221,9 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
         children: [
           Text(
             label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -1188,6 +1234,9 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
           const SizedBox(height: 6),
           Text(
             value,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -1220,15 +1269,14 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                 valueListenable: _landmarksNotifier,
                 builder: (context, landmarks, child) {
                   final isFront = _cameraController?.description.lensDirection == CameraLensDirection.front;
-                  final previewWidth = _cameraController?.value.previewSize?.height ?? 720;
-                  final previewHeight = _cameraController?.value.previewSize?.width ?? 1280;
+                  final previewSize = _getCameraPreviewDisplaySize();
                   return CustomPaint(
                     painter: PoseSkeletalPainter(
                       landmarks: landmarks,
                       pulseIntensity: _pulseController.value,
-                      previewWidth: previewWidth.toDouble(),
-                      previewHeight: previewHeight.toDouble(),
-                      isFrontCamera: isFront ?? true,
+                      previewWidth: previewSize.width,
+                      previewHeight: previewSize.height,
+                      isFrontCamera: isFront,
                     ),
                   );
                 },
@@ -1267,6 +1315,8 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
   }
 
   Widget _buildCameraMockFeed() {
+    final cameraPreviewSize = _getCameraPreviewDisplaySize();
+
     return Container(
       color: Colors.black,
       child: Stack(
@@ -1277,8 +1327,8 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
             FittedBox(
               fit: BoxFit.cover,
               child: SizedBox(
-                width: _cameraController!.value.previewSize?.height ?? 720,
-                height: _cameraController!.value.previewSize?.width ?? 1280,
+                width: cameraPreviewSize.width,
+                height: cameraPreviewSize.height,
                 child: CameraPreview(_cameraController!),
               ),
             )
@@ -1467,48 +1517,55 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
         border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Left: Active Info & Title
-          Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _isPaused ? Colors.amberAccent : AppTheme.gradientStart,
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _isPaused ? Colors.amberAccent : AppTheme.gradientStart,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.exerciseTitle,
-                    style: TextStyle(
-                      fontSize: isTablet ? 20 : 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontFamily: 'Inter',
-                    ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.exerciseTitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: isTablet ? 20 : 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _isPaused ? 'PAUSED' : 'AI ACTIVE',
+                        style: TextStyle(
+                          fontSize: isTablet ? 13 : 11,
+                          fontWeight: FontWeight.bold,
+                          color: _isPaused ? Colors.amberAccent : AppTheme.gradientStart,
+                          letterSpacing: 1,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _isPaused ? 'PAUSED' : 'AI ACTIVE',
-                    style: TextStyle(
-                      fontSize: isTablet ? 13 : 11,
-                      fontWeight: FontWeight.bold,
-                      color: _isPaused ? Colors.amberAccent : AppTheme.gradientStart,
-                      letterSpacing: 1,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
+
+          const SizedBox(width: 12),
 
           // Center: Time Elapsed
           Text(
@@ -1520,6 +1577,8 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
               fontFamily: 'Courier', // monospaced clock font
             ),
           ),
+
+          const SizedBox(width: 12),
 
           // Right: Audio Coach Indicator / Toggle
           GestureDetector(
@@ -1725,11 +1784,15 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
       );
     }
 
-    final double percent = _isFreestyleMode ? 0.0 : (_repCount / _targetReps).clamp(0.0, 1.0);
-    final String repsLabel = _isFreestyleMode ? '${_getTotalReps()}' : '$_repCount';
+    final int totalRepsTarget = _targetSets * _targetReps;
+    final int totalRepsDone = _getTotalReps().clamp(0, totalRepsTarget).toInt();
+    final double percent = _isFreestyleMode
+        ? 0.0
+        : (totalRepsDone / totalRepsTarget).clamp(0.0, 1.0).toDouble();
+    final String repsLabel = _isFreestyleMode ? '${_getTotalReps()}' : '$totalRepsDone/$totalRepsTarget';
     final String repsSubLabel = _isFreestyleMode
         ? 'TOTAL REPS'
-        : 'of $_targetReps reps';
+        : 'TOTAL REPS';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1767,7 +1830,9 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                   Text(
                     repsLabel,
                     style: TextStyle(
-                      fontSize: isTablet ? 48 : 38,
+                      fontSize: _isFreestyleMode
+                          ? (isTablet ? 48 : 38)
+                          : (isTablet ? 36 : 28),
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontFamily: 'Inter',
@@ -2091,7 +2156,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                   } else if (_isFreestyleMode) {
                     _finishWorkout();
                   } else {
-                    _simulateRepCount();
+                    _completeCurrentSet(countFullTarget: false);
                   }
                 },
                 child: Container(
@@ -2126,7 +2191,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                                   ? 'CALIBRATING...' 
                                   : _isPaused 
                                       ? 'PAUSED' 
-                                      : 'SIMULATE REP (TAP HERE)',
+                                      : 'BREAK',
                       style: TextStyle(
                         fontSize: isTablet ? 17 : 14.5,
                         fontWeight: FontWeight.bold,

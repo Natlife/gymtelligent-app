@@ -1,6 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'dart:math' as math;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme.dart';
 import 'workout_detail_screen.dart';
 import '../services/stats_service.dart';
@@ -48,14 +49,29 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
     });
 
     try {
-      final summary = await StatsService.getSummary();
-      final daily = await StatsService.getDailyStats(DateTime.now());
+      final today = StatsService.vietnamNow();
+      final todayKey = StatsService.formatVietnamDate(today);
       final profile = await ProfileService.getProfile();
+      final cacheKey = _dailyStatsCacheKey(profile, todayKey);
+      final cachedDaily = await _readCachedDailyStats(cacheKey, todayKey);
+
+      if (mounted && cachedDaily != null) {
+        setState(() {
+          _dailyStats = cachedDaily;
+          _isLoading = false;
+        });
+      }
+
+      final summary = await StatsService.getSummary();
+      final daily = await StatsService.getDailyStats(today);
+      if (daily != null) {
+        await _cacheDailyStats(cacheKey, daily);
+      }
 
       if (mounted) {
         setState(() {
           _summary = summary;
-          _dailyStats = daily;
+          _dailyStats = daily ?? cachedDaily;
           if (profile != null && profile['fullName'] != null) {
             _userName = profile['fullName'];
           }
@@ -69,6 +85,40 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
         });
       }
     }
+  }
+
+  String _dailyStatsCacheKey(Map<String, dynamic>? profile, String dateKey) {
+    final userKey = (profile?['id'] ??
+            profile?['userId'] ??
+            profile?['username'] ??
+            profile?['email'] ??
+            'current_user')
+        .toString();
+    return 'daily_stats_${userKey}_$dateKey';
+  }
+
+  Future<DailyStats?> _readCachedDailyStats(String cacheKey, String todayKey) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(cacheKey);
+      if (raw == null || raw.isEmpty) return null;
+
+      final data = jsonDecode(raw);
+      if (data is! Map<String, dynamic>) return null;
+
+      final stats = DailyStats.fromJson(data);
+      if (stats.date.isNotEmpty && stats.date != todayKey) return null;
+      return stats;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _cacheDailyStats(String cacheKey, DailyStats stats) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(cacheKey, jsonEncode(stats.toJson()));
+    } catch (_) {}
   }
 
   @override
@@ -105,30 +155,36 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
               children: [
                 // 1. Header (Date & Profile Avatar)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _getCurrentDateString(),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.getSecondaryTextColor(context),
-                            fontFamily: 'Inter',
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getCurrentDateString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.getSecondaryTextColor(context),
+                              fontFamily: 'Inter',
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Hello, $_userName!',
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            fontSize: isTablet ? 36 : 28,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 4),
+                          Text(
+                            'Hello, $_userName!',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                              fontSize: isTablet ? 36 : 28,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 16),
                     // Glowing Profile Avatar
                     Container(
                       width: 54,

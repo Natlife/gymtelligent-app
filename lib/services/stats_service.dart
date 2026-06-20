@@ -5,6 +5,17 @@ import '../models/stats_summary.dart';
 import 'api_client.dart';
 
 class StatsService {
+  static const Duration vietnamUtcOffset = Duration(hours: 7);
+
+  static DateTime vietnamNow() {
+    return DateTime.now().toUtc().add(vietnamUtcOffset);
+  }
+
+  static String formatVietnamDate(DateTime date) {
+    final vietnamDate = date.isUtc ? date.add(vietnamUtcOffset) : date;
+    return DateFormat('yyyy-MM-dd').format(vietnamDate);
+  }
+
   static Future<StatsSummary?> getSummary() async {
     try {
       final response = await ApiClient.get('/stats/summary');
@@ -18,7 +29,7 @@ class StatsService {
 
   static Future<DailyStats?> getDailyStats(DateTime date) async {
     try {
-      final formattedDate = DateFormat('yyyy-MM-dd').format(date);
+      final formattedDate = formatVietnamDate(date);
       final response = await ApiClient.get('/stats/daily?date=$formattedDate');
       final Map<String, dynamic> data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['code'] == 1000) {

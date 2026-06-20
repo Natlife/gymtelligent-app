@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "408736020888",
+    "project_id": "gymtelligent-cbccd",
+    "storage_bucket": "gymtelligent-cbccd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:408736020888:android:f2f7ae880c06624e1913ed",
+        "android_client_info": {
+          "package_name": "ai.application.gymtelligent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAex5vNh6br7r_pl8nBg3c3_96nVhZZQy8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../theme.dart';
 import 'workout_detail_screen.dart';
-import 'camera_training_screen.dart';
 import 'home_dashboard_screen.dart';
 import 'progress_screen.dart';
 import 'profile_screen.dart';
@@ -16,7 +15,8 @@ class ExerciseLibraryScreen extends StatefulWidget {
   State<ExerciseLibraryScreen> createState() => _ExerciseLibraryScreenState();
 }
 
-class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with TickerProviderStateMixin {
+class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
+    with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeInAnimation;
   late Animation<double> _slideAnimation;
@@ -42,9 +42,10 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
       duration: const Duration(milliseconds: 800),
     );
 
-    _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-    );
+    _fadeInAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _slideAnimation = Tween<double>(begin: 40.0, end: 0.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutBack),
@@ -109,7 +110,8 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
     setState(() {
       _filteredExercises = _exercises.where((exercise) {
         final matchesSearch = exercise.name.toLowerCase().contains(query);
-        final matchesCategory = _selectedCategory == 'All' || 
+        final matchesCategory =
+            _selectedCategory == 'All' ||
             exercise.category.toLowerCase() == _selectedCategory.toLowerCase();
         return matchesSearch && matchesCategory;
       }).toList();
@@ -119,28 +121,32 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
   void _onCardTapped(Exercise exercise) {
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => WorkoutDetailScreen(
-          title: exercise.name,
-          category: exercise.category,
-          level: exercise.difficultyLevel,
-          duration: '${exercise.defaultSets * 5} min',
-          imagePath: exercise.name.toLowerCase().contains('push')
-              ? 'assets/images/push_ups.png'
-              : exercise.name.toLowerCase().contains('squat')
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            WorkoutDetailScreen(
+              title: exercise.name,
+              category: exercise.category,
+              level: exercise.difficultyLevel,
+              duration: '${exercise.defaultSets * 5} min',
+              imagePath: exercise.name.toLowerCase().contains('push')
+                  ? 'assets/images/push_ups.png'
+                  : exercise.name.toLowerCase().contains('squat')
                   ? 'assets/images/squats.png'
                   : 'assets/images/deadlifts.png',
-          fallbackIcon: exercise.name.toLowerCase().contains('push')
-              ? Icons.fitness_center_rounded
-              : exercise.name.toLowerCase().contains('squat')
+              fallbackIcon: exercise.name.toLowerCase().contains('push')
+                  ? Icons.fitness_center_rounded
+                  : exercise.name.toLowerCase().contains('squat')
                   ? Icons.accessibility_new_rounded
                   : Icons.fitness_center_rounded,
-          exercise: exercise,
-        ),
+              exercise: exercise,
+            ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutCubic;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: child,
@@ -184,10 +190,11 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                       // Title: "Exercise Library"
                       Text(
                         'Exercise Library',
-                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          fontSize: isTablet ? 60 : 42,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              fontSize: isTablet ? 60 : 42,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
 
                       const SizedBox(height: 24),
@@ -200,18 +207,20 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                           color: AppTheme.getSurfaceColor(context),
                           borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                            color: _isSearchFocused 
-                                ? Theme.of(context).primaryColor 
+                            color: _isSearchFocused
+                                ? Theme.of(context).primaryColor
                                 : AppTheme.getBorderColor(context),
                             width: _isSearchFocused ? 2.0 : 1.5,
                           ),
-                          boxShadow: _isSearchFocused 
+                          boxShadow: _isSearchFocused
                               ? [
                                   BoxShadow(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.15),
+                                    color: Theme.of(
+                                      context,
+                                    ).primaryColor.withOpacity(0.15),
                                     blurRadius: 16,
                                     offset: const Offset(0, 4),
-                                  )
+                                  ),
                                 ]
                               : [],
                         ),
@@ -229,7 +238,9 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                             decoration: InputDecoration(
                               hintText: 'Search exercises...',
                               hintStyle: TextStyle(
-                                color: AppTheme.getTextColor(context).withOpacity(0.4),
+                                color: AppTheme.getTextColor(
+                                  context,
+                                ).withOpacity(0.4),
                                 fontSize: isTablet ? 20 : 17,
                                 fontFamily: 'Inter',
                               ),
@@ -238,19 +249,29 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                                 vertical: isTablet ? 18 : 14,
                               ),
                               prefixIcon: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0,
+                                ),
                                 child: SvgPicture.asset(
                                   'assets/icons/search.svg',
                                   width: isTablet ? 26 : 22,
                                   height: isTablet ? 26 : 22,
                                   colorFilter: ColorFilter.mode(
-                                    _isSearchFocused ? Theme.of(context).primaryColor : AppTheme.getTextColor(context).withOpacity(0.4),
+                                    _isSearchFocused
+                                        ? Theme.of(context).primaryColor
+                                        : AppTheme.getTextColor(
+                                            context,
+                                          ).withOpacity(0.4),
                                     BlendMode.srcIn,
                                   ),
                                   placeholderBuilder: (context) => Icon(
                                     Icons.search_rounded,
                                     size: isTablet ? 26 : 22,
-                                    color: _isSearchFocused ? Theme.of(context).primaryColor : AppTheme.getTextColor(context).withOpacity(0.4),
+                                    color: _isSearchFocused
+                                        ? Theme.of(context).primaryColor
+                                        : AppTheme.getTextColor(
+                                            context,
+                                          ).withOpacity(0.4),
                                   ),
                                 ),
                               ),
@@ -282,28 +303,37 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                         child: _isLoading
                             ? const Center(
                                 child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.gradientStart),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.gradientStart,
+                                  ),
                                 ),
                               )
                             : _filteredExercises.isEmpty
-                                ? Center(
-                                     child: Text(
-                                       'No exercises found',
-                                       style: TextStyle(
-                                         fontSize: 18,
-                                         color: AppTheme.getSecondaryTextColor(context),
-                                         fontFamily: 'Inter',
-                                       ),
-                                     ),
-                                  )
-                                : ListView.builder(
+                            ? Center(
+                                child: Text(
+                                  'No exercises found',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: AppTheme.getSecondaryTextColor(
+                                      context,
+                                    ),
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
                                 physics: const BouncingScrollPhysics(),
                                 itemCount: _filteredExercises.length,
                                 itemBuilder: (context, index) {
                                   final exercise = _filteredExercises[index];
                                   return Padding(
-                                    padding: const EdgeInsets.only(bottom: 24.0),
-                                    child: _buildExerciseCard(exercise, isTablet),
+                                    padding: const EdgeInsets.only(
+                                      bottom: 24.0,
+                                    ),
+                                    child: _buildExerciseCard(
+                                      exercise,
+                                      isTablet,
+                                    ),
                                   );
                                 },
                               ),
@@ -328,16 +358,13 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
 
     return Scaffold(
       backgroundColor: AppTheme.getBackgroundColor(context),
-      body: SafeArea(
-        child: bodyContent,
-      ),
+      body: SafeArea(child: bodyContent),
       bottomNavigationBar: _buildBottomNavigationBar(isTablet),
     );
   }
 
   Widget _buildCategoryChip(String label, bool isTablet) {
     final isSelected = _selectedCategory == label;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => _onCategorySelected(label),
       child: AnimatedContainer(
@@ -347,17 +374,16 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
           gradient: isSelected ? AppTheme.primaryGradient : null,
           color: isSelected ? null : AppTheme.getSurfaceColor(context),
           borderRadius: BorderRadius.circular(isSelected ? 35 : 30),
-          border: isSelected ? null : Border.all(
-            color: AppTheme.getBorderColor(context),
-            width: 1.2,
-          ),
+          border: isSelected
+              ? null
+              : Border.all(color: AppTheme.getBorderColor(context), width: 1.2),
           boxShadow: isSelected
               ? [
                   BoxShadow(
                     color: AppTheme.gradientStart.withOpacity(0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -366,8 +392,8 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
           style: TextStyle(
             fontSize: isTablet ? 20 : 16,
             fontWeight: FontWeight.bold,
-            color: isSelected 
-                ? (isDark ? Colors.black : Colors.white) 
+            color: isSelected
+                ? AppTheme.onGradient
                 : AppTheme.getTextColor(context).withOpacity(0.5),
             fontFamily: 'Inter',
           ),
@@ -380,14 +406,14 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
     final imagePath = exercise.name.toLowerCase().contains('push')
         ? 'assets/images/push_ups.png'
         : exercise.name.toLowerCase().contains('squat')
-            ? 'assets/images/squats.png'
-            : 'assets/images/deadlifts.png';
+        ? 'assets/images/squats.png'
+        : 'assets/images/deadlifts.png';
 
     final fallbackIcon = exercise.name.toLowerCase().contains('push')
         ? Icons.fitness_center_rounded
         : exercise.name.toLowerCase().contains('squat')
-            ? Icons.accessibility_new_rounded
-            : Icons.fitness_center_rounded;
+        ? Icons.accessibility_new_rounded
+        : Icons.fitness_center_rounded;
 
     return GestureDetector(
       onTap: () => _onCardTapped(exercise),
@@ -447,7 +473,10 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
                   children: [
                     // Level Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(15),
@@ -469,7 +498,10 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
 
                     // Duration Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(15),
@@ -534,10 +566,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
       decoration: BoxDecoration(
         color: AppTheme.getSurfaceColor(context),
         border: Border(
-          top: BorderSide(
-            color: AppTheme.getBorderColor(context),
-            width: 1.5,
-          ),
+          top: BorderSide(color: AppTheme.getBorderColor(context), width: 1.5),
         ),
       ),
       child: SafeArea(
@@ -547,10 +576,34 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildNavItem(0, 'Home', 'assets/icons/home.svg', Icons.home_rounded, isTablet),
-              _buildNavItem(1, 'Workouts', 'assets/icons/dumbbell_nav.svg', Icons.fitness_center_rounded, isTablet),
-              _buildNavItem(2, 'Progress', 'assets/icons/arrow_trend_up.svg', Icons.show_chart_rounded, isTablet),
-              _buildNavItem(3, 'Profile', 'assets/icons/user.svg', Icons.person_rounded, isTablet),
+              _buildNavItem(
+                0,
+                'Home',
+                'assets/icons/home.svg',
+                Icons.home_rounded,
+                isTablet,
+              ),
+              _buildNavItem(
+                1,
+                'Workouts',
+                'assets/icons/dumbbell_nav.svg',
+                Icons.fitness_center_rounded,
+                isTablet,
+              ),
+              _buildNavItem(
+                2,
+                'Progress',
+                'assets/icons/arrow_trend_up.svg',
+                Icons.show_chart_rounded,
+                isTablet,
+              ),
+              _buildNavItem(
+                3,
+                'Profile',
+                'assets/icons/user.svg',
+                Icons.person_rounded,
+                isTablet,
+              ),
             ],
           ),
         ),
@@ -558,13 +611,21 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> with Tick
     );
   }
 
-
-
-  Widget _buildNavItem(int index, String label, String iconPath, IconData fallbackIcon, bool isTablet) {
+  Widget _buildNavItem(
+    int index,
+    String label,
+    String iconPath,
+    IconData fallbackIcon,
+    bool isTablet,
+  ) {
     final isActive = _activeNavIndex == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = isDark ? AppTheme.gradientStart : const Color(0xFF059669);
-    final inactiveColor = isDark ? Colors.white.withOpacity(0.5) : const Color(0xFF64748B);
+    final activeColor = isDark
+        ? AppTheme.gradientStart
+        : const Color(0xFF059669);
+    final inactiveColor = isDark
+        ? Colors.white.withOpacity(0.5)
+        : const Color(0xFF64748B);
 
     return GestureDetector(
       onTap: () {

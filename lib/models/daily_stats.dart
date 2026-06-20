@@ -25,4 +25,15 @@ class DailyStats {
       avgPostureScore: (json['avgPostureScore'] ?? 0.0).toDouble(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date,
+      'totalCalories': totalCalories,
+      'totalDurationSeconds': totalDurationSeconds,
+      'totalReps': totalReps,
+      'workoutCount': workoutCount,
+      'avgPostureScore': avgPostureScore,
+    };
+  }
 }

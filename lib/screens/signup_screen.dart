@@ -4,6 +4,8 @@ import '../theme.dart';
 import 'login_screen.dart';
 import 'exercise_library_screen.dart';
 import '../services/auth_service.dart';
+import '../services/analytics_service.dart';
+import '../services/profile_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -307,6 +309,12 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
     if (mounted) Navigator.pop(context); // Close loading
     
     if (result['success'] == true) {
+      try {
+        final profile = await ProfileService.getProfile();
+        await AnalyticsService.applyUserContext(profile);
+        await AnalyticsService.logSignUp();
+      } catch (_) {}
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           PageRouteBuilder(

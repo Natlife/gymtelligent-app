@@ -6,9 +6,10 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <application
-        android:label="gymtelligent"
+        android:label="Gymtelligent"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/app_icon"
+        android:roundIcon="@mipmap/app_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,16 +1,23 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
+
 import 'api_client.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 class AuthService {
-  static Future<Map<String, dynamic>> login(String username, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String username,
+    String password,
+  ) async {
     try {
       final response = await ApiClient.post('/auth/login', {
         'username': username,
         'password': password,
       });
 
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final data = _decodeApiResponse(response.body);
       if (response.statusCode == 200 && data['code'] == 1000) {
         final token = data['data']['token'];
         await ApiClient.saveToken(token);
@@ -32,7 +39,7 @@ class AuthService {
       return {'success': false, 'message': data['message'] ?? 'Login failed'};
     } catch (e) {
       debugPrint('AuthService.login error: $e');
-      return {'success': false, 'message': 'Connection failed. Please check your internet and try again.'};
+      return {'success': false, 'message': _formatAuthError(e)};
     }
   }
 
@@ -61,8 +68,7 @@ class AuthService {
         'fitnessGoal': fitnessGoal,
         'fitnessLevel': fitnessLevel,
       });
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      final data = _decodeApiResponse(response.body);
       if (response.statusCode == 200 && data['code'] == 1000) {
         final token = data['data']['token'];
         await ApiClient.saveToken(token);
@@ -81,14 +87,39 @@ class AuthService {
         }
       }
 
-      return {'success': false, 'message': data['message'] ?? 'Registration failed'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Registration failed',
+      };
     } catch (e) {
       debugPrint('AuthService.register error: $e');
-      return {'success': false, 'message': 'Connection failed. Please check your internet and try again.'};
+      return {'success': false, 'message': _formatAuthError(e)};
     }
   }
 
   static Future<void> logout() async {
     await ApiClient.clearToken();
+  }
+
+  static Map<String, dynamic> _decodeApiResponse(String body) {
+    final decoded = jsonDecode(body);
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+    throw const FormatException('API response is not a JSON object');
+  }
+
+  static String _formatAuthError(Object error) {
+    if (error is SocketException ||
+        error is TimeoutException ||
+        error is http.ClientException) {
+      return 'Connection failed. Please check your internet and try again.';
+    }
+
+    if (error is FormatException) {
+      return 'Server returned an invalid response. Please try again.';
+    }
+
+    return 'Something went wrong. Please try again.';
   }
 }
