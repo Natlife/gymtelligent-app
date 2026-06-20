@@ -24,7 +24,7 @@ class AuthService {
         return {'success': true, 'message': 'Success'};
       }
 
-      // Extract detailed validation error map if available
+      
       if (data['data'] is Map) {
         final Map<String, dynamic> errors = data['data'];
         if (errors.isNotEmpty) {
@@ -75,7 +75,7 @@ class AuthService {
         return {'success': true, 'message': 'Registration successful'};
       }
 
-      // Extract detailed validation error map if available
+      
       if (data['data'] is Map) {
         final Map<String, dynamic> errors = data['data'];
         if (errors.isNotEmpty) {

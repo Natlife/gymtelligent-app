@@ -45,7 +45,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       ),
     );
 
-    // Subtle breathing animation for the illustration
+    
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -73,7 +73,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       _currentLanguage = _currentLanguage == 'EN' ? 'VI' : 'EN';
     });
     
-    // Show a mini snackbar with premium styling
+    
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -132,7 +132,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                               'assets/images/welcome_image.png',
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) {
-                                // Elegant placeholder if image is missing
+                                
                                 return Container(
                                   decoration: BoxDecoration(
                                     color: AppTheme.surface,
@@ -166,7 +166,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                       
                       const SizedBox(height: 24),
 
-                      // Description
+                      
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Text(

@@ -27,7 +27,7 @@ class WorkoutService {
       }
     } catch (_) {}
     
-    // Offline / Seeding Fail Fallback: Return exactly the 3 exercises supported by our AI TFLite Model (Push Ups removed)
+    
     return [
       Exercise(
         id: 2,

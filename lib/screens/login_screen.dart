@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   void initState() {
     super.initState();
 
-    // Entry Animations
+    
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutBack),
     );
 
-    // Subtle breathing animation for Logo
+    
     _breathingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -115,21 +115,21 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       return;
     }
 
-    // Show loading indicator
+    
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator(color: AppTheme.gradientStart)),
     );
 
-    // Call actual backend login (using email)
+    
     final result = await AuthService.login(email, pass);
     
-    // Close loading indicator
+    
     if (mounted) Navigator.pop(context);
 
     if (result['success'] == true) {
-      // Set the theme reactively based on the user's role
+      
       try {
         final profile = await ProfileService.getProfile();
         await AnalyticsService.applyUserContext(profile);
@@ -164,14 +164,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
       );
 
-      // Transition to ExerciseLibraryScreen
+      
       Future.delayed(const Duration(milliseconds: 600), () {
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             PageRouteBuilder(
               pageBuilder: (context, animation, secondaryAnimation) => const ExerciseLibraryScreen(),
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                const begin = Offset(0.0, 1.0); // Slide up transition
+                const begin = Offset(0.0, 1.0); 
                 const end = Offset.zero;
                 const curve = Curves.easeInOutCubic;
                 var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));

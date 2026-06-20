@@ -25,9 +25,9 @@ class _GetStartedScreenState extends State<GetStartedScreen> with TickerProvider
     // 5 Staggered Animation intervals:
     // 0: "Powered by AI" Title
     // 1: Subtitle
-    // 2: Feature 1 (AI Pose Detection)
-    // 3: Feature 2 (Real-Time Feedback)
-    // 4: Feature 3 (Track Progress)
+    
+    
+    
     _staggerControllers = List.generate(
       5,
       (index) => AnimationController(
@@ -48,7 +48,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> with TickerProvider
       );
     }).toList();
 
-    // Start staggered animation sequence
+    
     _animateStaggered();
   }
 
@@ -106,7 +106,7 @@ class _GetStartedScreenState extends State<GetStartedScreen> with TickerProvider
 
               const SizedBox(height: 12),
 
-              // Sub-headline
+              
               AnimatedBuilder(
                 animation: _staggerControllers[1],
                 builder: (context, child) {

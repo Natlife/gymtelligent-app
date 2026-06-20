@@ -45,7 +45,7 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
     try {
       final summary = await StatsService.getSummary();
       
-      // Calculate Monday of current week
+      
       final now = DateTime.now();
       final weekStart = now.subtract(Duration(days: now.weekday - 1));
       final weekly = await StatsService.getWeeklyStats(weekStart);
@@ -57,7 +57,7 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
           
           if (weekly.isNotEmpty) {
             _chartData = weekly.map((d) => d.totalCalories).toList();
-            final df = DateFormat('E'); // Mon, Tue, etc.
+            final df = DateFormat('E'); 
             _chartDays = weekly.map((d) => df.format(DateTime.parse(d.date))).toList();
           }
           _isLoading = false;
@@ -213,7 +213,7 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
                     width: double.infinity,
                     child: CustomPaint(
                       painter: NeonLineChartPainter(
-                        dataPoints: [calories, calories, calories, calories], // Standard dynamic fallback
+                        dataPoints: [calories, calories, calories, calories], 
                         weeks: ['W1', 'W2', 'W3', 'W4'],
                         isDark: isDark,
                       ),
@@ -418,7 +418,7 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
 }
 
 // ---------------------------------------------------------
-// Custom Painter for Neon Glowing Area Chart
+
 // ---------------------------------------------------------
 class NeonAreaChartPainter extends CustomPainter {
   final List<double> dataPoints;
@@ -455,7 +455,7 @@ class NeonAreaChartPainter extends CustomPainter {
       canvas.drawLine(Offset(paddingLeft, yGrid), Offset(width, yGrid), gridPaint);
     }
 
-    // Path calculation
+    
     final path = Path();
     final List<Offset> points = [];
 
@@ -466,7 +466,7 @@ class NeonAreaChartPainter extends CustomPainter {
       if (i == 0) {
         path.moveTo(x, y);
       } else {
-        // Curved line using cubicTo for natural flow
+        
         final prevX = points[i - 1].dx;
         final prevY = points[i - 1].dy;
         final controlX1 = prevX + xSegment / 2;
@@ -477,7 +477,7 @@ class NeonAreaChartPainter extends CustomPainter {
       }
     }
 
-    // Draw Area gradient underneath the curve
+    
     final areaPath = Path.from(path);
     areaPath.lineTo(points.last.dx, chartHeight);
     areaPath.lineTo(points.first.dx, chartHeight);
@@ -497,7 +497,7 @@ class NeonAreaChartPainter extends CustomPainter {
     
     canvas.drawPath(areaPath, areaPaint);
 
-    // Draw glowing neon line
+    
     final linePaint = Paint()
       ..color = primaryColor
       ..strokeWidth = 3.0
@@ -506,7 +506,7 @@ class NeonAreaChartPainter extends CustomPainter {
 
     canvas.drawPath(path, linePaint);
 
-    // Draw data labels (X axis and values)
+    
     final textStyle = TextStyle(
       color: isDark ? Colors.white60 : Colors.black54,
       fontSize: 10,
@@ -514,7 +514,7 @@ class NeonAreaChartPainter extends CustomPainter {
     );
 
     for (int i = 0; i < days.length; i++) {
-      // Draw days labels on X axis
+      
       final textSpan = TextSpan(text: days[i], style: textStyle);
       final textPainter = TextPainter(
         text: textSpan,
@@ -527,7 +527,7 @@ class NeonAreaChartPainter extends CustomPainter {
       );
     }
 
-    // Y Axis indicators
+    
     for (int i = 0; i < 4; i++) {
       final yGrid = chartHeight - (i * chartHeight / 3);
       final value = (i * maxVal / 3).round();
@@ -549,7 +549,7 @@ class NeonAreaChartPainter extends CustomPainter {
 }
 
 // ---------------------------------------------------------
-// Custom Painter for Neon Blue Line Chart
+
 // ---------------------------------------------------------
 class NeonLineChartPainter extends CustomPainter {
   final List<double> dataPoints;
@@ -586,7 +586,7 @@ class NeonLineChartPainter extends CustomPainter {
       canvas.drawLine(Offset(paddingLeft, yGrid), Offset(width, yGrid), gridPaint);
     }
 
-    // Path calculation
+    
     final path = Path();
     final List<Offset> points = [];
 
@@ -609,7 +609,7 @@ class NeonLineChartPainter extends CustomPainter {
 
     final secondaryColor = isDark ? AppTheme.gradientEnd : const Color(0xFF0D9488);
 
-    // Draw glowing neon line
+    
     final linePaint = Paint()
       ..color = secondaryColor
       ..strokeWidth = 4.0
@@ -618,7 +618,7 @@ class NeonLineChartPainter extends CustomPainter {
 
     canvas.drawPath(path, linePaint);
 
-    // Draw dot nodes on each week
+    
     final dotPaint = Paint()..color = secondaryColor;
     final dotBorderPaint = Paint()
       ..color = isDark ? Colors.black : Colors.white
@@ -630,7 +630,7 @@ class NeonLineChartPainter extends CustomPainter {
       canvas.drawCircle(point, 6.0, dotBorderPaint);
     }
 
-    // Draw data labels (X axis and values)
+    
     final textStyle = TextStyle(
       color: isDark ? Colors.white60 : Colors.black54,
       fontSize: 10,
@@ -638,7 +638,7 @@ class NeonLineChartPainter extends CustomPainter {
     );
 
     for (int i = 0; i < weeks.length; i++) {
-      // Draw weeks labels on X axis
+      
       final textSpan = TextSpan(text: weeks[i], style: textStyle);
       final textPainter = TextPainter(
         text: textSpan,
@@ -651,7 +651,7 @@ class NeonLineChartPainter extends CustomPainter {
       );
     }
 
-    // Y Axis indicators
+    
     for (int i = 0; i < 4; i++) {
       final yGrid = chartHeight - (i * chartHeight / 3);
       final value = (i * maxVal / 3).round();

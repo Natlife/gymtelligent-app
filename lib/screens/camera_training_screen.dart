@@ -106,13 +106,13 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
   void initState() {
     super.initState();
     
-    // Apply widget params
+    
     _targetReps = widget.targetReps;
     _targetSets = widget.targetSets;
     _restSeconds = widget.restSeconds;
     _isFreestyleMode = widget.isFreestyleMode;
 
-    // Initialize Google ML Kit Pose Detector for on-device real-time pose stream
+    
     final options = PoseDetectorOptions(
       model: PoseDetectionModel.base,
       mode: PoseDetectionMode.stream,
@@ -174,7 +174,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
       
       _cameras = cameras;
       
-      // Look for the front camera (self-training)
+      
       CameraDescription? frontCamera;
       for (var camera in cameras) {
         if (camera.lensDirection == CameraLensDirection.front) {
@@ -183,13 +183,13 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
         }
       }
       
-      // Fallback to back camera if front camera is not found
+      
       final selectedCamera = frontCamera ?? cameras.first;
       _cameraIndex = cameras.indexOf(selectedCamera);
       
       _cameraController = CameraController(
         selectedCamera,
-        ResolutionPreset.low, // Lower resolution for high-performance ML Kit pose detection without lag
+        ResolutionPreset.low, 
         enableAudio: false,
         imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
       );
@@ -200,7 +200,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
           _isCameraInitialized = true;
         });
 
-        // Start processing camera stream frames
+        
         _cameraController!.startImageStream((CameraImage image) {
           _processCameraImage(image);
         });
@@ -254,7 +254,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
       setState(() {
         _elapsedSeconds++;
         
-        // Randomly simulate a slight accuracy variance
+        
         if (_elapsedSeconds % 5 == 0) {
           _formAccuracy = 92.0 + (math.Random().nextDouble() * 7.5);
           if (_formAccuracy < 94.0) {
@@ -330,13 +330,13 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
     return 'squat';
   }
 
-  // Real-time camera image stream processing via Google ML Kit Pose Detection
+  
   Future<void> _processCameraImage(CameraImage image) async {
     if (!_isLiveTracking) return;
     if (!_calibrationDone || _isPaused || _isDetecting) return;
 
     final now = DateTime.now();
-    // FPS Limiter: Process one frame every 180ms (~5.5 FPS) to eliminate CPU lag and keep UI at 60fps
+    
     if (_lastProcessedTime != null && now.difference(_lastProcessedTime!).inMilliseconds < 180) {
       return;
     }
@@ -372,17 +372,17 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
         final rotatedImageSize = _getRotatedImageSize(image, rotationDegrees);
 
-        // Map the keypoints from the detected pose to MediaPipe ids
+        
         pose.landmarks.forEach((type, landmark) {
           final id = _mapPoseLandmarkTypeToId(type);
           if (id != null) {
-            // Filter out low confidence landmarks to avoid noisy rendering or out-of-frame extrapolation
+            
             if (landmark.likelihood < 0.55) return;
             
-            // Normalize with respect to the actual rotated coordinate canvas processed by ML Kit
+            
             final double normX = (landmark.x / rotatedImageSize.width).clamp(0.0, 1.0).toDouble();
             final double normY = (landmark.y / rotatedImageSize.height).clamp(0.0, 1.0).toDouble();
-            // Normalize Z using rotatedWidth to keep all 3 dimensions (x, y, z) on the same unified scale [0.0 - 1.0]
+            
             final double normZ = landmark.z / rotatedImageSize.width;
             landmarks[id] = Point3D(normX, normY, normZ);
           }
@@ -413,7 +413,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
           }
         }
       } else {
-        // No pose detected in this frame, let the background simulation continue
+        
         _useLiveCameraDetection = false;
       }
     } catch (e) {
@@ -464,13 +464,13 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
   InputImageFormat _getFormat(int rawValue) {
     switch (rawValue) {
-      case 35: // YUV_420_888 (Android standard)
+      case 35: 
         return InputImageFormat.yuv420;
-      case 842094169: // YV12
+      case 842094169: 
         return InputImageFormat.yv12;
-      case 17: // NV21
+      case 17: 
         return InputImageFormat.nv21;
-      case 1111970369: // BGRA8888 (iOS standard)
+      case 1111970369: 
         return InputImageFormat.bgra8888;
       default:
         return Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888;
@@ -496,7 +496,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
     final rotation = _getRotation(rotationDegrees);
     final format = _getFormat(image.format.raw);
 
-    // Concat planes for full bytes
+    
     final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in image.planes) {
       allBytes.putUint8List(plane.bytes);
@@ -557,7 +557,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
   void _processFrameLandmarks() {
     if (_isLiveTracking) {
       if (!_useLiveCameraDetection) {
-        // Clear skeleton to avoid displaying pre-existing static simulation skeleton when person is not in frame
+        
         _landmarksNotifier.value = {};
       }
       return;
@@ -568,63 +568,63 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
     final exerciseType = widget.exerciseTitle.toLowerCase();
     
     // We will generate the 12 key landmarks listed in model_specs.txt:
-    // 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28
+    
     final Map<int, Point3D> landmarks = {};
     
-    // Coordinate frame size matching painter perfectly (midX, midY)
+    
     final double midX = 200;
     final double midY = 400;
 
     // Default stable landmarks
-    landmarks[23] = Point3D(midX + 35, midY + 20, 0); // L_HIP
-    landmarks[24] = Point3D(midX - 35, midY + 20, 0); // R_HIP
-    landmarks[25] = Point3D(midX + 40, midY + 100, 0); // L_KNEE
-    landmarks[26] = Point3D(midX - 40, midY + 100, 0); // R_KNEE
-    landmarks[27] = Point3D(midX + 45, midY + 180, 0); // L_ANKLE
-    landmarks[28] = Point3D(midX - 45, midY + 180, 0); // R_ANKLE
+    landmarks[23] = Point3D(midX + 35, midY + 20, 0); 
+    landmarks[24] = Point3D(midX - 35, midY + 20, 0); 
+    landmarks[25] = Point3D(midX + 40, midY + 100, 0); 
+    landmarks[26] = Point3D(midX - 40, midY + 100, 0); 
+    landmarks[27] = Point3D(midX + 45, midY + 180, 0); 
+    landmarks[28] = Point3D(midX - 45, midY + 180, 0); 
 
-    // Nose
+    
     landmarks[0] = Point3D(midX, midY - 170, 0);
 
     if (exerciseType.contains('push')) {
-      // Sweep angle from 205 to 255 to perfectly trigger RepCounterService's push_up logic
-      // down threshold: < 220, up threshold: > 240
+      
+      
       final double angleDeg = 205 + (progress * 50);
       final double angleRad = angleDeg * math.pi / 180;
-      landmarks[13] = Point3D(midX - 80, midY + 45, 0); // L_ELBOW
-      landmarks[11] = Point3D(landmarks[13]!.x, landmarks[13]!.y - 60, 0); // L_SHOULDER
+      landmarks[13] = Point3D(midX - 80, midY + 45, 0); 
+      landmarks[11] = Point3D(landmarks[13]!.x, landmarks[13]!.y - 60, 0); 
       landmarks[15] = Point3D(
         landmarks[13]!.x + 50 * math.cos(angleRad - math.pi / 2),
         landmarks[13]!.y + 50 * math.sin(angleRad - math.pi / 2),
         0,
       );
 
-      // Mirror right arm for visualization consistency
-      landmarks[14] = Point3D(midX + 80, midY + 45, 0); // R_ELBOW
-      landmarks[12] = Point3D(landmarks[14]!.x, landmarks[14]!.y - 60, 0); // R_SHOULDER
+      
+      landmarks[14] = Point3D(midX + 80, midY + 45, 0); 
+      landmarks[12] = Point3D(landmarks[14]!.x, landmarks[14]!.y - 60, 0); 
       landmarks[16] = Point3D(
         landmarks[14]!.x - 50 * math.cos(angleRad - math.pi / 2),
         landmarks[14]!.y + 50 * math.sin(angleRad - math.pi / 2),
         0,
       );
 
-      // Stable hips/knees/ankles for pushups
+      
       final double bodyOffset = math.sin(progress * math.pi) * 35.0;
-      landmarks[23] = Point3D(midX + 80, midY + 100 + (bodyOffset * 0.6), 0); // L_HIP
-      landmarks[24] = Point3D(midX + 90, midY + 80 + (bodyOffset * 0.6), 0); // R_HIP
-      landmarks[25] = Point3D(midX + 170, midY + 150 + (bodyOffset * 0.3), 0); // L_KNEE
-      landmarks[26] = Point3D(midX + 180, midY + 130 + (bodyOffset * 0.3), 0); // R_KNEE
-      landmarks[27] = Point3D(midX + 250, midY + 200, 0); // L_ANKLE
-      landmarks[28] = Point3D(midX + 260, midY + 180, 0); // R_ANKLE
+      landmarks[23] = Point3D(midX + 80, midY + 100 + (bodyOffset * 0.6), 0); 
+      landmarks[24] = Point3D(midX + 90, midY + 80 + (bodyOffset * 0.6), 0); 
+      landmarks[25] = Point3D(midX + 170, midY + 150 + (bodyOffset * 0.3), 0); 
+      landmarks[26] = Point3D(midX + 180, midY + 130 + (bodyOffset * 0.3), 0); 
+      landmarks[27] = Point3D(midX + 250, midY + 200, 0); 
+      landmarks[28] = Point3D(midX + 260, midY + 180, 0); 
       landmarks[0] = Point3D(midX - 110, midY - 60 + bodyOffset, 0);
       
     } else if (exerciseType.contains('squat')) {
-      // down threshold: rightLeg > 160 && leftLeg < 220
-      // up threshold: rightLeg < 140 && leftLeg > 210
+      
+      
       final double rightLegDeg = 165 - (progress * 30);
       final double rightLegRad = rightLegDeg * math.pi / 180;
-      landmarks[26] = Point3D(midX - 50, midY + 90, 0); // R_KNEE
-      landmarks[24] = Point3D(landmarks[26]!.x, landmarks[26]!.y - 80, 0); // R_HIP
+      landmarks[26] = Point3D(midX - 50, midY + 90, 0); 
+      landmarks[24] = Point3D(landmarks[26]!.x, landmarks[26]!.y - 80, 0); 
       landmarks[28] = Point3D(
         landmarks[26]!.x + 90 * math.cos(rightLegRad - math.pi / 2),
         landmarks[26]!.y + 90 * math.sin(rightLegRad - math.pi / 2),
@@ -633,31 +633,31 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
       final double leftLegDeg = 215 + (progress * 10);
       final double leftLegRad = leftLegDeg * math.pi / 180;
-      landmarks[25] = Point3D(midX + 50, midY + 90, 0); // L_KNEE
-      landmarks[23] = Point3D(landmarks[25]!.x, landmarks[25]!.y - 80, 0); // L_HIP
+      landmarks[25] = Point3D(midX + 50, midY + 90, 0); 
+      landmarks[23] = Point3D(landmarks[25]!.x, landmarks[25]!.y - 80, 0); 
       landmarks[27] = Point3D(
         landmarks[25]!.x + 90 * math.cos(leftLegRad - math.pi / 2),
         landmarks[25]!.y + 90 * math.sin(leftLegRad - math.pi / 2),
         0,
       );
 
-      // Upper body moves down
+      
       final double bodyOffset = math.sin(progress * math.pi) * 55.0;
-      landmarks[11] = Point3D(midX + 55, midY - 120 + bodyOffset, 0); // L_SHOULDER
-      landmarks[12] = Point3D(midX - 55, midY - 120 + bodyOffset, 0); // R_SHOULDER
-      landmarks[13] = Point3D(midX + 80, midY - 70 + bodyOffset, 0); // L_ELBOW
-      landmarks[14] = Point3D(midX - 80, midY - 70 + bodyOffset, 0); // R_ELBOW
-      landmarks[15] = Point3D(midX + 60, midY - 30 + bodyOffset, 0); // L_WRIST
-      landmarks[16] = Point3D(midX - 60, midY - 30 + bodyOffset, 0); // R_WRIST
+      landmarks[11] = Point3D(midX + 55, midY - 120 + bodyOffset, 0); 
+      landmarks[12] = Point3D(midX - 55, midY - 120 + bodyOffset, 0); 
+      landmarks[13] = Point3D(midX + 80, midY - 70 + bodyOffset, 0); 
+      landmarks[14] = Point3D(midX - 80, midY - 70 + bodyOffset, 0); 
+      landmarks[15] = Point3D(midX + 60, midY - 30 + bodyOffset, 0); 
+      landmarks[16] = Point3D(midX - 60, midY - 30 + bodyOffset, 0); 
       landmarks[0] = Point3D(midX, midY - 170 + bodyOffset, 0);
       
     } else if (exerciseType.contains('curl') || exerciseType.contains('bicep')) {
-      // down threshold: rightArm > 160 && rightArm < 200, leftArm > 140 && leftArm < 200
-      // up threshold: rightArm > 310 || rightArm < 60, leftArm > 310 || leftArm < 60
+      
+      
       final double rightArmDeg = 180 + (progress * 150);
       final double rightArmRad = rightArmDeg * math.pi / 180;
-      landmarks[14] = Point3D(midX - 70, midY - 60, 0); // R_ELBOW
-      landmarks[12] = Point3D(landmarks[14]!.x, landmarks[14]!.y - 60, 0); // R_SHOULDER
+      landmarks[14] = Point3D(midX - 70, midY - 60, 0); 
+      landmarks[12] = Point3D(landmarks[14]!.x, landmarks[14]!.y - 60, 0); 
       landmarks[16] = Point3D(
         landmarks[14]!.x + 70 * math.cos(rightArmRad - math.pi / 2),
         landmarks[14]!.y + 70 * math.sin(rightArmRad - math.pi / 2),
@@ -666,26 +666,26 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
       final double leftArmDeg = 180 + (progress * 150);
       final double leftArmRad = leftArmDeg * math.pi / 180;
-      landmarks[13] = Point3D(midX + 70, midY - 60, 0); // L_ELBOW
-      landmarks[11] = Point3D(landmarks[13]!.x, landmarks[13]!.y - 60, 0); // L_SHOULDER
+      landmarks[13] = Point3D(midX + 70, midY - 60, 0); 
+      landmarks[11] = Point3D(landmarks[13]!.x, landmarks[13]!.y - 60, 0); 
       landmarks[15] = Point3D(
         landmarks[13]!.x + 70 * math.cos(leftArmRad - math.pi / 2),
         landmarks[13]!.y + 70 * math.sin(leftArmRad - math.pi / 2),
         0,
       );
       
-      // Mirror stable shoulder layout
-      landmarks[11] = Point3D(midX + 55, midY - 120, 0); // L_SHOULDER
-      landmarks[12] = Point3D(midX - 55, midY - 120, 0); // R_SHOULDER
+      
+      landmarks[11] = Point3D(midX + 55, midY - 120, 0); 
+      landmarks[12] = Point3D(midX - 55, midY - 120, 0); 
       
     } else {
-      // Shoulder press model
-      // down threshold: rightArm > 280 && leftArm < 80
-      // up threshold: rightArm < 240 && leftArm > 120
+      
+      
+      
       final double rightArmDeg = 290 - (progress * 60);
       final double rightArmRad = rightArmDeg * math.pi / 180;
-      landmarks[14] = Point3D(midX - 75, midY - 100, 0); // R_ELBOW
-      landmarks[12] = Point3D(landmarks[14]!.x, landmarks[14]!.y - 60, 0); // R_SHOULDER
+      landmarks[14] = Point3D(midX - 75, midY - 100, 0); 
+      landmarks[12] = Point3D(landmarks[14]!.x, landmarks[14]!.y - 60, 0); 
       landmarks[16] = Point3D(
         landmarks[14]!.x + 70 * math.cos(rightArmRad - math.pi / 2),
         landmarks[14]!.y + 70 * math.sin(rightArmRad - math.pi / 2),
@@ -694,20 +694,20 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
       final double leftArmDeg = 70 + (progress * 60);
       final double leftArmRad = leftArmDeg * math.pi / 180;
-      landmarks[13] = Point3D(midX + 75, midY - 100, 0); // L_ELBOW
-      landmarks[11] = Point3D(landmarks[13]!.x, landmarks[13]!.y - 60, 0); // L_SHOULDER
+      landmarks[13] = Point3D(midX + 75, midY - 100, 0); 
+      landmarks[11] = Point3D(landmarks[13]!.x, landmarks[13]!.y - 60, 0); 
       landmarks[15] = Point3D(
         landmarks[13]!.x + 70 * math.cos(leftArmRad - math.pi / 2),
         landmarks[13]!.y + 70 * math.sin(leftArmRad - math.pi / 2),
         0,
       );
 
-      // Mirror stable shoulder layout
-      landmarks[11] = Point3D(midX + 55, midY - 120, 0); // L_SHOULDER
-      landmarks[12] = Point3D(midX - 55, midY - 120, 0); // R_SHOULDER
+      
+      landmarks[11] = Point3D(midX + 55, midY - 120, 0); 
+      landmarks[12] = Point3D(midX - 55, midY - 120, 0); 
     }
 
-    // Publish landmarks to the performant 60fps listenable
+    
     _landmarksNotifier.value = landmarks;
 
     final predictedLabel = _getPredictedLabel(widget.exerciseTitle);
@@ -946,7 +946,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                   _detectedExerciseStable = predictedLabel;
                   _stableFrameCount = 0;
                   
-                  // Display glowing update in UI
+                  
                   _hudMessage = "Auto-classified: ${_detectedExerciseStable.toUpperCase()}";
                   _hudColor = Colors.cyan;
                 }
@@ -994,11 +994,11 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
   double _getMetValue(String title) {
     final t = title.toLowerCase().trim();
-    if (t.contains('push')) return 3.8;      // Push Ups
-    if (t.contains('squat')) return 5.0;     // Squats
-    if (t.contains('curl') || t.contains('bicep')) return 4.5;      // Biceps Curl
-    if (t.contains('press') || t.contains('shoulder')) return 5.0;  // Shoulder Press
-    return 4.0; // Standard fallback
+    if (t.contains('push')) return 3.8;      
+    if (t.contains('squat')) return 5.0;     
+    if (t.contains('curl') || t.contains('bicep')) return 4.5;      
+    if (t.contains('press') || t.contains('shoulder')) return 5.0;  
+    return 4.0; 
   }
 
   double _calculateCalories() {
@@ -1143,7 +1143,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.of(context).pop(); // Close dialog
+                          Navigator.of(context).pop(); 
                           setState(() {
                             _repCount = 0;
                             _elapsedSeconds = 0;
@@ -1152,7 +1152,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                             _isResting = false;
                             _repCounterService.reset();
                           });
-                          _startCalibration(); // Restart
+                          _startCalibration(); 
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1173,8 +1173,8 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.of(context).pop(); // Close dialog
-                          Navigator.of(context).pop(); // Go back to details
+                          Navigator.of(context).pop(); 
+                          Navigator.of(context).pop(); 
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1454,7 +1454,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
             const SizedBox(height: 18),
 
-            // Real-time AI Initialization steps based on the actual TFLite specifications
+            
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               decoration: BoxDecoration(
@@ -1567,20 +1567,20 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen> with Ticker
 
           const SizedBox(width: 12),
 
-          // Center: Time Elapsed
+          
           Text(
             _formatTime(_elapsedSeconds),
             style: TextStyle(
               fontSize: isTablet ? 28 : 22,
               fontWeight: FontWeight.w700,
               color: Colors.white,
-              fontFamily: 'Courier', // monospaced clock font
+              fontFamily: 'Courier', 
             ),
           ),
 
           const SizedBox(width: 12),
 
-          // Right: Audio Coach Indicator / Toggle
+          
           GestureDetector(
             onTap: () {
               setState(() {
@@ -2245,12 +2245,12 @@ class TechGridPainter extends CustomPainter {
 
     const spacing = 45.0;
 
-    // Draw horizontal lines
+    
     for (double y = 0; y < size.height; y += spacing) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
 
-    // Draw vertical lines
+    
     for (double x = 0; x < size.width; x += spacing) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
@@ -2263,7 +2263,7 @@ class TechGridPainter extends CustomPainter {
 // 2. Animated Custom Skeletal Keypoints Painter drawing a gorgeous posture skeleton doing workouts!
 class PoseSkeletalPainter extends CustomPainter {
   final Map<int, Point3D> landmarks;
-  final double pulseIntensity; // 0.0 -> 1.0 breath animation loop
+  final double pulseIntensity; 
   final double previewWidth;
   final double previewHeight;
   final bool isFrontCamera;
@@ -2280,7 +2280,7 @@ class PoseSkeletalPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (landmarks.isEmpty) return;
 
-    // Line and point styles
+    
     final linePaint = Paint()
       ..color = AppTheme.gradientStart
       ..strokeWidth = 3.5
@@ -2295,7 +2295,7 @@ class PoseSkeletalPainter extends CustomPainter {
       ..color = AppTheme.gradientStart.withOpacity(0.3 * (1.0 - pulseIntensity))
       ..style = PaintingStyle.fill;
 
-    // Calculate scale and translation of BoxFit.cover dynamically to ensure perfect camera stream alignment
+    
     final double screenWidth = size.width;
     final double screenHeight = size.height;
     final double scale = math.max(screenWidth / previewWidth, screenHeight / previewHeight);
@@ -2310,13 +2310,13 @@ class PoseSkeletalPainter extends CustomPainter {
       
       // Scale dynamically to the actual canvas size of the specific device screen
       if (pt.x <= 1.0 && pt.y <= 1.0) {
-        // Mirror X for front camera tracking to align perfectly with user's perspective
+        
         final double actualX = isFrontCamera ? (1.0 - pt.x) : pt.x;
         final double screenX = dx + (actualX * scaledWidth);
         final double screenY = dy + (pt.y * scaledHeight);
         return Offset(screenX, screenY);
       } else {
-        // Simulated landmarks: scale from their 400x800 coordinate box to the full canvas size
+        
         return Offset((pt.x / 400.0) * size.width, (pt.y / 800.0) * size.height);
       }
     }
@@ -2325,8 +2325,8 @@ class PoseSkeletalPainter extends CustomPainter {
     final lShoulder = getOffset(11);
     final rShoulder = getOffset(12);
     
-    // Sửa lỗi đường thẳng kéo từ góc trên bên trái màn hình xuống
-    // Nếu một trong hai khớp vai chưa được nhận dạng, tránh vẽ đường nối cổ/đầu về góc (0,0)
+    
+    
     final neck = (lShoulder == Offset.zero || rShoulder == Offset.zero)
         ? Offset.zero
         : Offset((lShoulder.dx + rShoulder.dx) / 2, (lShoulder.dy + rShoulder.dy) / 2);
@@ -2338,7 +2338,7 @@ class PoseSkeletalPainter extends CustomPainter {
     final lHip = getOffset(23);
     final rHip = getOffset(24);
 
-    // Tránh nối cột sống nếu khớp hông chưa nhận diện
+    
     final spine = (lHip == Offset.zero || rHip == Offset.zero)
         ? Offset.zero
         : Offset((lHip.dx + rHip.dx) / 2, (lHip.dy + rHip.dy) / 2 - 30);
@@ -2348,7 +2348,7 @@ class PoseSkeletalPainter extends CustomPainter {
     final lAnkle = getOffset(27);
     final rAnkle = getOffset(28);
 
-    // Bộ lọc an toàn sinh học (Anatomical constraint filtering) để chống đảo ngược khớp tay/chân khi đứng quá sát
+    
     final bool lLegValid = lHip != Offset.zero && lKnee != Offset.zero && lKnee.dy > lHip.dy;
     final bool rLegValid = rHip != Offset.zero && rKnee != Offset.zero && rKnee.dy > rHip.dy;
     final bool lAnkleValid = lKnee != Offset.zero && lAnkle != Offset.zero && lAnkle.dy > lKnee.dy;
@@ -2360,18 +2360,18 @@ class PoseSkeletalPainter extends CustomPainter {
     if (rShoulder != Offset.zero && lShoulder != Offset.zero) canvas.drawLine(rShoulder, lShoulder, linePaint);
     if (neck != Offset.zero && spine != Offset.zero) canvas.drawLine(neck, spine, linePaint);
     
-    // Arms
+    
     if (rShoulder != Offset.zero && rElbow != Offset.zero) canvas.drawLine(rShoulder, rElbow, linePaint);
     if (rElbow != Offset.zero && rWrist != Offset.zero) canvas.drawLine(rElbow, rWrist, linePaint);
     if (lShoulder != Offset.zero && lElbow != Offset.zero) canvas.drawLine(lShoulder, lElbow, linePaint);
     if (lElbow != Offset.zero && lWrist != Offset.zero) canvas.drawLine(lElbow, lWrist, linePaint);
 
-    // Torso / Hips
+    
     if (spine != Offset.zero && rHip != Offset.zero && upperBodyValid) canvas.drawLine(spine, rHip, linePaint);
     if (spine != Offset.zero && lHip != Offset.zero && upperBodyValid) canvas.drawLine(spine, lHip, linePaint);
     if (rHip != Offset.zero && lHip != Offset.zero && upperBodyValid) canvas.drawLine(rHip, lHip, linePaint);
 
-    // Legs
+    
     if (rHip != Offset.zero && rKnee != Offset.zero && rLegValid) canvas.drawLine(rHip, rKnee, linePaint);
     if (rKnee != Offset.zero && rAnkle != Offset.zero && rAnkleValid) canvas.drawLine(rKnee, rAnkle, linePaint);
     if (lHip != Offset.zero && lKnee != Offset.zero && lLegValid) canvas.drawLine(lHip, lKnee, linePaint);
@@ -2381,9 +2381,9 @@ class PoseSkeletalPainter extends CustomPainter {
     final joints = [head, neck, rShoulder, lShoulder, rElbow, lElbow, rWrist, lWrist, spine, rHip, lHip, rKnee, lKnee, rAnkle, lAnkle];
     for (var joint in joints) {
       if (joint == Offset.zero) continue;
-      // Glow pulse
+      
       canvas.drawCircle(joint, 12.0 * pulseIntensity, pulsePaint);
-      // Main point
+      
       canvas.drawCircle(joint, 5.0, jointPaint);
     }
   }

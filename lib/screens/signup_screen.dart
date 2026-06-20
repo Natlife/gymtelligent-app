@@ -61,7 +61,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
 
-    // Entry Animations
+    
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -75,7 +75,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutBack),
     );
 
-    // Subtle breathing animation for Logo
+    
     _breathingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -155,7 +155,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
   void _onCreateAccountPressed() async {
     final name = _nameController.text.trim();
     final username = _usernameController.text.trim();
-    final email = _phoneController.text.trim(); // Now email
+    final email = _phoneController.text.trim(); 
     final pass = _passwordController.text.trim();
 
     void showValidationError(String message) {
@@ -214,7 +214,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
       return;
     }
 
-    // Transition to profile onboarding locally.
+    
     setState(() {
       _isProfileOnboarding = true;
     });
@@ -278,7 +278,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
       builder: (context) => const Center(child: CircularProgressIndicator(color: AppTheme.gradientStart)),
     );
     
-    // Map user-friendly frontend goals to exact backend enum values
+    
     String mappedGoal = 'GENERAL_FITNESS';
     if (_selectedGoal == 'BUILD_MUSCLE') {
       mappedGoal = 'BUILD_MUSCLE';
@@ -290,7 +290,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
 
     final name = _nameController.text.trim();
     final username = _usernameController.text.trim();
-    final email = _phoneController.text.trim(); // Now email
+    final email = _phoneController.text.trim(); 
     final pass = _passwordController.text.trim();
 
     final result = await AuthService.register(
@@ -306,7 +306,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
       fitnessLevel: _selectedLevel,
     );
     
-    if (mounted) Navigator.pop(context); // Close loading
+    if (mounted) Navigator.pop(context); 
     
     if (result['success'] == true) {
       try {
@@ -637,7 +637,7 @@ class _SignupScreenState extends State<SignupScreen> with TickerProviderStateMix
 
                                   // Email Field
                                   _buildInputField(
-                                    controller: _phoneController, // Keep controller name to avoid breaking other logic
+                                    controller: _phoneController, 
                                     focusNode: _phoneFocusNode,
                                     isFocused: _isPhoneFocused,
                                     hintText: 'Email',

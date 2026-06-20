@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Global ValueNotifier to dynamically handle the theme throughout the whole application in real time
+
 final ValueNotifier<ThemeData> appThemeNotifier = ValueNotifier<ThemeData>(
   AppTheme.darkTheme,
 );
@@ -24,9 +24,9 @@ class AppTheme {
     0xFF1E293B,
   ).withOpacity(0.12);
 
-  // Brand Neon Gradient Accents
-  static const Color gradientStart = Color(0xFF00FE8B); // Neon Green
-  static const Color gradientEnd = Color(0xFF00BBFC); // Neon Blue
+  
+  static const Color gradientStart = Color(0xFF00FE8B); 
+  static const Color gradientEnd = Color(0xFF00BBFC); 
   static const Color onGradient = Color(0xFF020617);
 
   static const LinearGradient primaryGradient = LinearGradient(
@@ -62,15 +62,15 @@ class AppTheme {
         : const Color(0xFFE2E8F0);
   }
 
-  // Dynamic Neon Border for active elements based on current brightness
+  
   static Color getActiveBorderColor(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
     return isLight
         ? const Color(0xFF059669)
-        : gradientStart; // Deep Emerald for Light, Neon Green for Dark
+        : gradientStart; 
   }
 
-  // User Dark Theme
+  
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
@@ -111,7 +111,7 @@ class AppTheme {
     );
   }
 
-  // Admin Light Theme (Contrast Mode)
+  
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,

@@ -15,7 +15,7 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> with TickerPr
   late List<Animation<double>> _fadeAnimations;
   late List<Animation<Offset>> _slideAnimations;
 
-  int _selectedGoalIndex = 0; // Default: Build Muscle
+  int _selectedGoalIndex = 0; 
 
   bool _isBackHovered = false;
   bool _isStartHovered = false;
@@ -42,7 +42,7 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> with TickerPr
   void initState() {
     super.initState();
 
-    // 5 Staggered elements:
+    
     // 0: Header Title
     // 1: Subtitle
     // 2: Card 1 (Build Muscle)
@@ -117,14 +117,14 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> with TickerPr
       ),
     );
 
-    // Transition to ExerciseLibraryScreen
+    
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => const ExerciseLibraryScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              const begin = Offset(0.0, 1.0); // Slide up transition from bottom for main screen entry!
+              const begin = Offset(0.0, 1.0); 
               const end = Offset.zero;
               const curve = Curves.easeInOutCubic;
               var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
@@ -177,7 +177,7 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> with TickerPr
 
               const SizedBox(height: 12),
 
-              // Sub-headline: "What do you want to achieve?"
+              
               AnimatedBuilder(
                 animation: _staggerControllers[1],
                 builder: (context, child) {
@@ -269,7 +269,7 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> with TickerPr
 
                   const SizedBox(width: 16),
 
-                  // Start Training Button (Gradient)
+                  
                   Expanded(
                     child: MouseRegion(
                       onEnter: (_) => setState(() => _isStartHovered = true),

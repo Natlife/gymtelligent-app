@@ -83,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     final workoutsCount = _summary?.totalWorkouts.toString() ?? '0';
     final streak = _summary?.currentStreak.toString() ?? '0';
     
-    // Format calories to e.g. 4.2k or raw value if small
+    
     String caloriesStr = '0';
     if (_summary != null) {
       final double cals = _summary!.totalCalories;
@@ -130,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   ),
                   child: Row(
                     children: [
-                      // Avatar
+                      
                       Container(
                         width: 72,
                         height: 72,
@@ -287,7 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           GestureDetector(
             onTap: () async {
               await AnalyticsService.logLogout();
-              // Clear saved token
+              
               await AuthService.logout();
               if (mounted) {
                 Navigator.of(context).pushAndRemoveUntil(

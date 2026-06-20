@@ -185,7 +185,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
                       ),
                     ),
                     const SizedBox(width: 16),
-                    // Glowing Profile Avatar
+                    
                     Container(
                       width: 54,
                       height: 54,
@@ -298,7 +298,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
   Widget _buildActivityRingCard(bool isTablet) {
     final double calories = _dailyStats?.totalCalories ?? 0.0;
     final int durationMin = ((_dailyStats?.totalDurationSeconds ?? 0) / 60).round();
-    const double targetCalories = 600.0; // Default daily goal of 600 kcal
+    const double targetCalories = 600.0; 
     final double goalProgress = (calories / targetCalories).clamp(0.0, 1.0);
     final String goalPercent = '${(goalProgress * 100).toStringAsFixed(0)}%';
 
@@ -339,7 +339,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
             ],
           ),
           const SizedBox(width: 24),
-          // Ring Stats
+          
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,7 +524,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Exercise Image
+            
             Image.network(
               imageUrl,
               fit: BoxFit.cover,

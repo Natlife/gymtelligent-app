@@ -38,7 +38,7 @@ class _CameraAccessScreenState extends State<CameraAccessScreen> with TickerProv
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutBack),
     );
 
-    // Glowing pulse animation for the circular camera icon background
+    
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -59,7 +59,7 @@ class _CameraAccessScreenState extends State<CameraAccessScreen> with TickerProv
   }
 
   void _requestCameraPermission() {
-    // Show feedback SnackBar
+    
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -134,7 +134,7 @@ class _CameraAccessScreenState extends State<CameraAccessScreen> with TickerProv
                             width: 150,
                             height: 150,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0C2C29), // Deep forest dark green
+                              color: const Color(0xFF0C2C29), 
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: const Color(0xFF0BFF88).withOpacity(0.5),
@@ -196,7 +196,7 @@ class _CameraAccessScreenState extends State<CameraAccessScreen> with TickerProv
 
                       const Spacer(),
 
-                      // Privacy Banner Banner
+                      
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
                         decoration: BoxDecoration(

@@ -33,10 +33,10 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
   late Animation<double> _fadeInAnimation;
   late Animation<double> _slideAnimation;
 
-  // Storing which steps have been checked off/completed by the user!
+  
   final Set<int> _completedSteps = {};
 
-  // Customized details based on the exercise title!
+  
   late String _aboutText;
   late List<String> _steps;
   late String _calories;
@@ -293,7 +293,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
       backgroundColor: AppTheme.background,
       body: Stack(
         children: [
-          // Scrollable Content
+          
           Positioned.fill(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -303,7 +303,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
                   // Hero Header Image & Title details overlay
                   _buildHeroHeader(screenSize, isTablet),
 
-                  // Lower contents with entrance fade & slide animation
+                  
                   AnimatedBuilder(
                     animation: _fadeController,
                     builder: (context, child) {
@@ -436,7 +436,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Hero Image
+          
           Image.asset(
             _heroImage,
             fit: BoxFit.cover,
@@ -609,7 +609,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
           ),
           const SizedBox(height: 14),
 
-          // Metric value
+          
           Text(
             value,
             style: TextStyle(
@@ -622,7 +622,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
           ),
           const SizedBox(height: 6),
 
-          // Metric Label
+          
           Text(
             label,
             style: TextStyle(
@@ -694,7 +694,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> with SingleTi
 
             const SizedBox(width: 16),
 
-            // Step Description
+            
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 4.0),

@@ -36,7 +36,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
   void initState() {
     super.initState();
 
-    // Entry Animations
+    
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -431,7 +431,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Background Image
+              
               Image.asset(
                 imagePath,
                 fit: BoxFit.cover,

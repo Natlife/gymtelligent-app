@@ -189,7 +189,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                 
                 const SizedBox(height: 20),
                 
-                // Content
+                
                 Text(
                   'FEEDBACK CONTENT',
                   style: TextStyle(
@@ -219,7 +219,7 @@ class _AdminFeedbackScreenState extends State<AdminFeedbackScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // Date footer
+                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

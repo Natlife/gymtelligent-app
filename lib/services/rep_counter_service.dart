@@ -9,7 +9,7 @@ class Point3D {
 }
 
 class RepCounterService {
-  // Counters for all exercises
+  
   final Map<String, int> _counters = {
     "push_up": 0,
     "squat": 0,
@@ -17,7 +17,7 @@ class RepCounterService {
     "shoulder_press": 0,
   };
 
-  // Tracking stages
+  
   final Map<String, String?> _stages = {
     "push_up": null,
     "squat": null,
@@ -26,7 +26,7 @@ class RepCounterService {
     "shoulder_press": null,
   };
 
-  // Reset counters
+  
   void reset() {
     _counters.updateAll((key, value) => 0);
     _stages.updateAll((key, value) => null);
@@ -35,7 +35,7 @@ class RepCounterService {
   int getCounter(String exerciseKey) => _counters[exerciseKey] ?? 0;
   String? getStage(String key) => _stages[key];
 
-  // Match the Python's angle ABC calculation
+  
   double calculateAngle(Point3D a, Point3D b, Point3D c) {
     double radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x);
     double degrees = radians * (180.0 / math.pi);
@@ -45,7 +45,7 @@ class RepCounterService {
     return degrees;
   }
 
-  // Update counters based on prediction label and coordinate map
+  
   void update(String predictedLabel, Map<int, Point3D> landmarks) {
     final label = predictedLabel.toLowerCase().trim();
 
