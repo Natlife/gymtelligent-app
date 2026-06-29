@@ -57,6 +57,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen>
   late AnimationController _audioWaveController;
 
   final RepCounterService _repCounterService = RepCounterService();
+  final PoseFrameStabilizer _poseFrameStabilizer = PoseFrameStabilizer();
   final ValueNotifier<Map<int, Point3D>> _landmarksNotifier =
       ValueNotifier<Map<int, Point3D>>({});
   /// Tracks 0.0–1.0 progress within the current single rep (angle-based).
@@ -414,7 +415,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen>
     final now = DateTime.now();
 
     if (_lastProcessedTime != null &&
-        now.difference(_lastProcessedTime!).inMilliseconds < 180) {
+        now.difference(_lastProcessedTime!).inMilliseconds < 30) {
       return;
     }
 
@@ -433,6 +434,7 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen>
       if (poses.isNotEmpty) {
         final pose = poses.first;
         final Map<int, Point3D> landmarks = {};
+        final Map<int, double> confidence = {};
 
         final camera = _cameras[_cameraIndex];
         final sensorOrientation = camera.sensorOrientation;
@@ -463,8 +465,18 @@ class _CameraTrainingScreenState extends State<CameraTrainingScreen>
 
             final double normZ = landmark.z / rotatedImageSize.width;
             landmarks[id] = Point3D(normX, normY, normZ);
+            confidence[id] = landmark.likelihood;
           }
         });
+
+        final stabilized = _poseFrameStabilizer.smooth(
+          landmarks,
+          confidence,
+          now,
+        );
+        landmarks
+          ..clear()
+          ..addAll(stabilized);
 
         if (landmarks.containsKey(11) && landmarks.containsKey(12)) {
           _useLiveCameraDetection = true;
@@ -3269,4 +3281,58 @@ class PoseSkeletalPainter extends CustomPainter {
       oldDelegate.previewWidth != previewWidth ||
       oldDelegate.previewHeight != previewHeight ||
       oldDelegate.isFrontCamera != isFrontCamera;
+}
+
+/// Confidence- and motion-adaptive exponential smoothing for skeletal landmarks.
+class PoseFrameStabilizer {
+  final Map<int, Point3D> _previous = {};
+  DateTime? _previousTimestamp;
+
+  Map<int, Point3D> smooth(
+    Map<int, Point3D> raw,
+    Map<int, double> confidence,
+    DateTime timestamp,
+  ) {
+    if (_previousTimestamp == null ||
+        timestamp.difference(_previousTimestamp!).inMilliseconds > 500) {
+      reset();
+    }
+
+    final result = <int, Point3D>{};
+    for (final entry in raw.entries) {
+      final previous = _previous[entry.key];
+      if (previous == null) {
+        result[entry.key] = entry.value;
+        continue;
+      }
+      final movement = math.sqrt(
+        math.pow(entry.value.x - previous.x, 2) +
+            math.pow(entry.value.y - previous.y, 2),
+      );
+      final visibility = (confidence[entry.key] ?? 0).clamp(0.0, 1.0);
+      final alpha = (0.32 + movement * 4.0 + visibility * 0.18)
+          .clamp(0.35, 0.88)
+          .toDouble();
+      result[entry.key] = Point3D(
+        _mix(previous.x, entry.value.x, alpha),
+        _mix(previous.y, entry.value.y, alpha),
+        _mix(previous.z, entry.value.z, alpha),
+      );
+    }
+
+    _previous
+      ..clear()
+      ..addAll(result);
+    _previousTimestamp = timestamp;
+    return result;
+  }
+
+  void reset() {
+    _previous.clear();
+    _previousTimestamp = null;
+  }
+
+  static double _mix(double previous, double current, double alpha) {
+    return previous + (current - previous) * alpha;
+  }
 }
