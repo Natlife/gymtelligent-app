@@ -45,8 +45,8 @@ android {
 
     defaultConfig {
         applicationId = "ai.application.gymtelligent"
-        // MLKit Pose Detection + camera package require minSdk >= 21
-        minSdk = flutter.minSdkVersion
+        // tflite_flutter 0.12.x requires Android API 26 or newer.
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

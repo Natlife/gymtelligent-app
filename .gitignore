@@ -51,3 +51,12 @@ app.*.map.json
 
 # Split debug info (generated when obfuscation is enabled)
 /debug-info/
+
+# AI training datasets and generated artifacts
+/training/data/
+/training/artifacts/
+/training/runs/
+/training/.venv/
+/training/edge-profile*/
+.tools/
+dist/*.apk

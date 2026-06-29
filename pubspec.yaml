@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.3.0
   camera: ^0.12.0+1
+  # CameraX 0.7.2 supports real NV21 image streams required by ML Kit.
+  camera_android_camerax: ^0.7.2
   http: ^1.2.0
   shared_preferences: ^2.2.0
   flutter_secure_storage: ^9.2.2
@@ -78,6 +80,7 @@ flutter:
     - assets/models/exercise_classifier_with_scaler_fp16.tflite
     - assets/models/exercise_classifier_with_scaler_fp32.tflite
     - assets/models/labels.txt
+    - assets/models/tcn/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
