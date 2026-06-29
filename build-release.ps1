@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 # ============================================================
 
 $KEYSTORE = "android\app\gymtelligent-release.jks"
-$VERSION_FILE = "release-version.txt"
+$VERSION_FILE = "release-version.json"
 $ENV_FILE = "config/env/production.json"
 $OUTPUT_DIR = "dist\mobile"
 $PRIMARY_SOURCE_APK = "build\app\outputs\flutter-apk\app-release.apk"
@@ -17,20 +17,25 @@ $SOURCE_AAB = "build\app\outputs\bundle\release\app-release.aab"
 
 function Read-ReleaseVersion {
     if (-not (Test-Path $VERSION_FILE)) {
-        throw "Missing $VERSION_FILE. Create it with a value like: 1.0.0"
+        throw "Missing $VERSION_FILE. Create it with a JSON like: { `"versionName`": `"1.0.0`", `"versionCode`": 1 }"
     }
 
-    $version = (Get-Content $VERSION_FILE -Raw).Trim()
-
-    if ([string]::IsNullOrWhiteSpace($version)) {
-        throw "$VERSION_FILE is empty. Set a value like: 1.0.0"
+    $content = Get-Content $VERSION_FILE -Raw
+    try {
+        $versionData = $content | ConvertFrom-Json
+    } catch {
+        throw "$VERSION_FILE is not valid JSON."
     }
 
-    if ($version -match '[\\/:*?"<>|]') {
-        throw "$VERSION_FILE contains characters that are not valid in a file name."
+    if ([string]::IsNullOrWhiteSpace($versionData.versionName)) {
+        throw "$VERSION_FILE must define 'versionName'."
     }
 
-    return $version
+    if ($null -eq $versionData.versionCode) {
+        throw "$VERSION_FILE must define 'versionCode'."
+    }
+
+    return $versionData
 }
 
 function Read-AppEnvironment {
@@ -51,7 +56,14 @@ function Read-AppEnvironment {
     return $envConfig
 }
 
-$RELEASE_VERSION = Read-ReleaseVersion
+$VERSION_DATA = Read-ReleaseVersion
+$RELEASE_VERSION = $VERSION_DATA.versionName.ToString().Trim()
+$BUILD_NUMBER = $VERSION_DATA.versionCode.ToString().Trim()
+
+if ($RELEASE_VERSION -match '[\\/:*?"<>|]') {
+    throw "Release version contains characters that are not valid in a file name."
+}
+
 $APP_ENV_CONFIG = Read-AppEnvironment
 $FINAL_APK_NAME = "gymtelligent-v$RELEASE_VERSION.apk"
 $FINAL_APK_PATH = Join-Path $OUTPUT_DIR $FINAL_APK_NAME
@@ -60,7 +72,8 @@ $FINAL_AAB_PATH = Join-Path $OUTPUT_DIR $FINAL_AAB_NAME
 
 Write-Host ""
 Write-Host "[1/5] Checking prerequisites..." -ForegroundColor Cyan
-Write-Host "      Release version: v$RELEASE_VERSION" -ForegroundColor Gray
+Write-Host "      Release version name: v$RELEASE_VERSION" -ForegroundColor Gray
+Write-Host "      Release version code: $BUILD_NUMBER" -ForegroundColor Gray
 Write-Host "      Environment file: $ENV_FILE" -ForegroundColor Gray
 Write-Host "      App env: $($APP_ENV_CONFIG.APP_ENV)" -ForegroundColor Gray
 Write-Host "      API URL: $($APP_ENV_CONFIG.API_BASE_URL)" -ForegroundColor Gray
@@ -95,14 +108,14 @@ if (Test-Path $FALLBACK_SOURCE_APK) { Remove-Item $FALLBACK_SOURCE_APK -Force }
 if (Test-Path $SOURCE_AAB) { Remove-Item $SOURCE_AAB -Force }
 
 Write-Host "      Building APK..." -ForegroundColor Gray
-& flutter build apk --release "--dart-define-from-file=$ENV_FILE"
+& flutter build apk --release "--dart-define-from-file=$ENV_FILE" "--build-name=$RELEASE_VERSION" "--build-number=$BUILD_NUMBER"
 
 Write-Host "      Building App Bundle (AAB)..." -ForegroundColor Gray
 # The App Bundle build might exit with non-zero code due to symbol stripping issues with NDK 28,
 # but the AAB itself is successfully compiled and signed by Gradle.
 $oldPreference = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-& flutter build appbundle --release "--dart-define-from-file=$ENV_FILE"
+& flutter build appbundle --release "--dart-define-from-file=$ENV_FILE" "--build-name=$RELEASE_VERSION" "--build-number=$BUILD_NUMBER"
 $ErrorActionPreference = $oldPreference
 
 # Verify APK build

@@ -7,6 +7,7 @@ import 'progress_screen.dart';
 import 'profile_screen.dart';
 import '../services/workout_service.dart';
 import '../models/exercise.dart';
+import '../widgets/onboarding_tour.dart';
 
 class ExerciseLibraryScreen extends StatefulWidget {
   const ExerciseLibraryScreen({super.key});
@@ -31,6 +32,18 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
   bool _isLoading = true;
   List<Exercise> _exercises = [];
   List<Exercise> _filteredExercises = [];
+
+  // GlobalKeys for Onboarding Tour
+  final GlobalKey _searchBarKey = GlobalKey();
+  final GlobalKey _categoryChipsKey = GlobalKey();
+  final GlobalKey _firstExerciseCardKey = GlobalKey();
+
+  final GlobalKey _homeTabKey = GlobalKey();
+  final GlobalKey _workoutsTabKey = GlobalKey();
+  final GlobalKey _progressTabKey = GlobalKey();
+  final GlobalKey _profileTabKey = GlobalKey();
+
+  bool _hasTriggeredWorkoutsTour = false;
 
   @override
   void initState() {
@@ -76,6 +89,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
           _filteredExercises = list;
           _isLoading = false;
         });
+        _checkAndTriggerWorkoutsTour();
       }
     } catch (_) {
       if (mounted) {
@@ -84,6 +98,52 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
         });
       }
     }
+  }
+
+  void _checkAndTriggerWorkoutsTour() {
+    if (_activeNavIndex == 1 && !_isLoading && !_hasTriggeredWorkoutsTour) {
+      _hasTriggeredWorkoutsTour = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showWorkoutsOnboardingTour();
+      });
+    }
+  }
+
+  void _showWorkoutsOnboardingTour({bool force = false}) {
+    if (!mounted || _isLoading) return;
+
+    final steps = [
+      OnboardingStep(
+        title: 'Thư viện bài tập AI 🏋️',
+        description: 'Đây là danh sách các động tác tập luyện được hỗ trợ bởi công nghệ trí tuệ nhân tạo (AI) giúp chỉnh sửa tư thế.',
+      ),
+      OnboardingStep(
+        title: 'Tìm kiếm bài tập',
+        description: 'Nhập tên bài tập (như Squat, Push-up...) để lọc nhanh động tác mong muốn.',
+        targetKey: _searchBarKey,
+        highlightShape: 'rect',
+      ),
+      OnboardingStep(
+        title: 'Bộ lọc danh mục',
+        description: 'Chuyển đổi nhanh giữa các nhóm bài tập Sức mạnh (Strength), Tăng thể lực (Cardio) hoặc hiển thị Tất cả.',
+        targetKey: _categoryChipsKey,
+        highlightShape: 'rect',
+      ),
+      if (_filteredExercises.isNotEmpty)
+        OnboardingStep(
+          title: 'Chi tiết & Thiết lập bài tập',
+          description: 'Mỗi bài tập sẽ hiển thị cấp độ và thời lượng dự kiến. Nhấp chọn bài tập để mở giao diện cài đặt AI.',
+          targetKey: _firstExerciseCardKey,
+          highlightShape: 'rect',
+        ),
+    ];
+
+    OnboardingTour.start(
+      context,
+      steps: steps,
+      tourKey: 'workouts_library_tour',
+      force: force,
+    );
   }
 
   @override
@@ -169,10 +229,15 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
             setState(() {
               _activeNavIndex = 1;
             });
+            _checkAndTriggerWorkoutsTour();
           },
+          workoutsTabKey: _workoutsTabKey,
+          progressTabKey: _progressTabKey,
+          profileTabKey: _profileTabKey,
         );
         break;
       case 1:
+        _checkAndTriggerWorkoutsTour();
         bodyContent = AnimatedBuilder(
           animation: _fadeController,
           builder: (context, child) {
@@ -188,18 +253,36 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                       const SizedBox(height: 32),
 
                       // Title: "Exercise Library"
-                      Text(
-                        'Exercise Library',
-                        style: Theme.of(context).textTheme.displayLarge
-                            ?.copyWith(
-                              fontSize: isTablet ? 60 : 42,
-                              fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Exercise Library',
+                              style: Theme.of(context).textTheme.displayLarge
+                                  ?.copyWith(
+                                    fontSize: isTablet ? 60 : 42,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.help_outline_rounded,
+                              color: AppTheme.gradientStart,
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              _showWorkoutsOnboardingTour(force: true);
+                            },
+                            tooltip: 'Xem hướng dẫn',
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 24),
 
                       AnimatedContainer(
+                        key: _searchBarKey,
                         duration: const Duration(milliseconds: 200),
                         width: double.infinity,
                         height: isTablet ? 76 : 64,
@@ -283,17 +366,20 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                       const SizedBox(height: 18),
 
                       // Horizontal category chips
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        child: Row(
-                          children: [
-                            _buildCategoryChip('All', isTablet),
-                            const SizedBox(width: 14),
-                            _buildCategoryChip('Strength', isTablet),
-                            const SizedBox(width: 14),
-                            _buildCategoryChip('Cardio', isTablet),
-                          ],
+                      KeyedSubtree(
+                        key: _categoryChipsKey,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: [
+                              _buildCategoryChip('All', isTablet),
+                              const SizedBox(width: 14),
+                              _buildCategoryChip('Strength', isTablet),
+                              const SizedBox(width: 14),
+                              _buildCategoryChip('Cardio', isTablet),
+                            ],
+                          ),
                         ),
                       ),
 
@@ -327,6 +413,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
                                 itemBuilder: (context, index) {
                                   final exercise = _filteredExercises[index];
                                   return Padding(
+                                    key: index == 0 ? _firstExerciseCardKey : null,
                                     padding: const EdgeInsets.only(
                                       bottom: 24.0,
                                     ),
@@ -627,11 +714,22 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen>
         ? Colors.white.withOpacity(0.5)
         : const Color(0xFF64748B);
 
+    final GlobalKey? navKey;
+    if (index == 0) navKey = _homeTabKey;
+    else if (index == 1) navKey = _workoutsTabKey;
+    else if (index == 2) navKey = _progressTabKey;
+    else if (index == 3) navKey = _profileTabKey;
+    else navKey = null;
+
     return GestureDetector(
+      key: navKey,
       onTap: () {
         setState(() {
           _activeNavIndex = index;
         });
+        if (index == 1) {
+          _checkAndTriggerWorkoutsTour();
+        }
       },
       child: Container(
         color: Colors.transparent,

@@ -110,7 +110,7 @@ class AuthService {
   }
 
   static String _formatAuthError(Object error) {
-    if (error is SocketException ||
+    if ((!kIsWeb && error is SocketException) ||
         error is TimeoutException ||
         error is http.ClientException) {
       return 'Connection failed. Please check your internet and try again.';

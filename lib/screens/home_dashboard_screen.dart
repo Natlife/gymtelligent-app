@@ -8,13 +8,20 @@ import '../services/stats_service.dart';
 import '../services/profile_service.dart';
 import '../models/stats_summary.dart';
 import '../models/daily_stats.dart';
+import '../widgets/onboarding_tour.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   final VoidCallback onNavigateToWorkouts;
+  final GlobalKey? workoutsTabKey;
+  final GlobalKey? progressTabKey;
+  final GlobalKey? profileTabKey;
   
   const HomeDashboardScreen({
     super.key, 
     required this.onNavigateToWorkouts,
+    this.workoutsTabKey,
+    this.progressTabKey,
+    this.profileTabKey,
   });
 
   @override
@@ -22,6 +29,12 @@ class HomeDashboardScreen extends StatefulWidget {
 }
 
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTickerProviderStateMixin {
+  // GlobalKeys for Onboarding
+  final GlobalKey _profileHeaderKey = GlobalKey();
+  final GlobalKey _activityRingKey = GlobalKey();
+  final GlobalKey _quickStartKey = GlobalKey();
+  final GlobalKey _statsDashboardKey = GlobalKey();
+
   late AnimationController _fadeController;
   late Animation<double> _fadeIn;
 
@@ -77,6 +90,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
           }
           _isLoading = false;
         });
+
+        // Trigger onboarding tour after dashboard has rendered
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showOnboardingTour();
+        });
       }
     } catch (_) {
       if (mounted) {
@@ -85,6 +103,62 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
         });
       }
     }
+  }
+
+  void _showOnboardingTour({bool force = false}) {
+    if (!mounted) return;
+
+    final steps = [
+      OnboardingStep(
+        title: 'Chào mừng đến với Gymtelligent! 👋',
+        description: 'Tôi là trợ lý ảo hỗ trợ tập luyện của bạn. Hãy để tôi hướng dẫn bạn các tính năng chính của ứng dụng nhé.',
+      ),
+      OnboardingStep(
+        title: 'Thông tin cá nhân',
+        description: 'Nơi hiển thị thông tin lời chào và ảnh đại diện của bạn. Hãy cập nhật đầy đủ thông tin cá nhân trong mục Profile nhé.',
+        targetKey: _profileHeaderKey,
+        highlightShape: 'rect',
+      ),
+      OnboardingStep(
+        title: 'Mục tiêu hàng ngày',
+        description: 'Theo dõi tiến trình hoàn thành mục tiêu calo tiêu thụ và tổng thời gian rèn luyện của bạn hôm nay tại đây.',
+        targetKey: _activityRingKey,
+        highlightShape: 'rect',
+      ),
+      OnboardingStep(
+        title: 'Bắt đầu tập luyện ngay',
+        description: 'Bấm vào đây để truy cập nhanh danh sách bài tập thông minh được hỗ trợ bởi AI và bắt đầu buổi tập của bạn.',
+        targetKey: _quickStartKey,
+        highlightShape: 'rect',
+      ),
+      OnboardingStep(
+        title: 'Chỉ số sức khỏe tổng hợp',
+        description: 'Xem nhanh số bài tập đã hoàn thành, lượng calo đốt cháy và số ngày tập liên tiếp để luôn giữ vững động lực.',
+        targetKey: _statsDashboardKey,
+        highlightShape: 'rect',
+      ),
+      if (widget.workoutsTabKey != null)
+        OnboardingStep(
+          title: 'Thư viện bài tập',
+          description: 'Xem danh sách toàn bộ các động tác được hướng dẫn chi tiết bởi AI.',
+          targetKey: widget.workoutsTabKey,
+          highlightShape: 'circle',
+        ),
+      if (widget.progressTabKey != null)
+        OnboardingStep(
+          title: 'Biểu đồ tiến trình',
+          description: 'Xem các thống kê chuyên sâu và biểu đồ tiến bộ của bạn qua từng tuần/tháng.',
+          targetKey: widget.progressTabKey,
+          highlightShape: 'circle',
+        ),
+    ];
+
+    OnboardingTour.start(
+      context,
+      steps: steps,
+      tourKey: 'home_dashboard_tour',
+      force: force,
+    );
   }
 
   String _dailyStatsCacheKey(Map<String, dynamic>? profile, String dateKey) {
@@ -155,6 +229,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
               children: [
                 // 1. Header (Date & Profile Avatar)
                 Row(
+                  key: _profileHeaderKey,
                   children: [
                     Expanded(
                       child: Column(
@@ -184,7 +259,18 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
                         ],
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.help_outline_rounded,
+                        color: AppTheme.gradientStart,
+                        size: 26,
+                      ),
+                      onPressed: () {
+                        _showOnboardingTour(force: true);
+                      },
+                      tooltip: 'Xem hướng dẫn',
+                    ),
+                    const SizedBox(width: 8),
                     
                     Container(
                       width: 54,
@@ -221,12 +307,18 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
                 const SizedBox(height: 28),
 
                 // 2. Activity Goal Card (Activity Ring)
-                _buildActivityRingCard(isTablet),
+                KeyedSubtree(
+                  key: _activityRingKey,
+                  child: _buildActivityRingCard(isTablet),
+                ),
 
                 const SizedBox(height: 24),
 
                 // 3. Quick Start Neon Gradient Button
-                _buildQuickStartCard(isTablet),
+                KeyedSubtree(
+                  key: _quickStartKey,
+                  child: _buildQuickStartCard(isTablet),
+                ),
 
                 const SizedBox(height: 32),
 
@@ -288,7 +380,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
                 const SizedBox(height: 32),
 
                 // 6. Bottom Stats Dashboard
-                _buildStatsDashboard(isTablet),
+                KeyedSubtree(
+                  key: _statsDashboardKey,
+                  child: _buildStatsDashboard(isTablet),
+                ),
               ],
             ),
       ),
